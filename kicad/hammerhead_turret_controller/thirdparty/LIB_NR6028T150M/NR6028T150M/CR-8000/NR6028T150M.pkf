@@ -1,0 +1,10 @@
+(unit MM)
+
+(package "NR6028T150M"
+    (type UNDEF)
+    (uver 2)
+    (mountForm default
+        (footprintRef "NR6028T150M")
+        (spec "default")
+    )
+)

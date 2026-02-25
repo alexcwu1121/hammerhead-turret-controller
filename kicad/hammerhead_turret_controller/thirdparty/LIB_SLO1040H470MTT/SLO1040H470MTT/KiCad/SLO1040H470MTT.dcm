@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP SLO1040H470MTT
+D SMD,10.8x10x4mm Power Inductors RoHS
+K
+F https://datasheet.lcsc.com/szlcsc/1809291208_Sunltech-Tech-SLO1040H470MTT_C182153.pdf
+$ENDCMP
+#
+#End Doc Library

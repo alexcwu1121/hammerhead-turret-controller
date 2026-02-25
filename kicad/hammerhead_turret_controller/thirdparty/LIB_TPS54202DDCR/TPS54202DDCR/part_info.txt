@@ -1,0 +1,9 @@
+Manufacturer=Texas Instruments
+PartNumber=TPS54202DDCR
+PartCategory=Power Supply
+PackageCategory=SOT23 (6-Pin)
+PinCount=6
+Version=1.1
+Released=2020-08-20 15:27:54
+Downloaded=2026-02-14 15:24:30
+3D=Y

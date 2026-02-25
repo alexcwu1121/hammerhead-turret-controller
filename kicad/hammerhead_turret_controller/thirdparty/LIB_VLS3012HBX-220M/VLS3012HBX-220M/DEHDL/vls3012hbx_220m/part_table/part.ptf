@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'VLS3012HBX_220M'
+CLASS = DISCRETE
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET";
+{========================================================================================}
+ "TDK", "VLS3012HBX-220M" (!) = "", "VLS3012", "Other", "810-VLS3012HBX-220M", "https://www.mouser.co.uk/ProductDetail/TDK/VLS3012HBX-220M?qs=pfd5qewlna6PjmR%252BRPDvXw%3D%3D", "VLS3012HBX-220M", "https://www.arrow.com/en/products/vls3012hbx-220m/tdk?utm_currency=USD&region=nac", "Fixed Inductors 3x3x1.2mm 22uH 20% Magnetic Power Inductor", "https://product.tdk.com/system/files/dam/doc/product/inductor/inductor/smd/catalog/inductor_commercial_power_vls3012hbx_en.pdf"
+END_PART
+
+END.

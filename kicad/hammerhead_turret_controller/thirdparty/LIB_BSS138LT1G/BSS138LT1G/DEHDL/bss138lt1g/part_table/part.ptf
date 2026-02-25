@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'BSS138LT1G'
+CLASS = DISCRETE
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "onsemi", "BSS138LT1G" (!) = "", "SOT96P237X111-3N", "SOT23 (3-Pin)", "863-BSS138LT1G", "https://www.mouser.co.uk/ProductDetail/onsemi/BSS138LT1G?qs=vNc2DXHODiKPZ2y3rQhTYQ%3D%3D", "BSS138LT1G", "https://www.arrow.com/en/products/bss138lt1g/on-semiconductor?utm_currency=USD&region=europe", "Low Threshold Voltage; Miniature SOT-23 Surface Mount Package; RoHS Compliant", "https://www.onsemi.com/pub/Collateral/BSS138LT1-D.PDF", "1.11 mm"
+END_PART
+
+END.

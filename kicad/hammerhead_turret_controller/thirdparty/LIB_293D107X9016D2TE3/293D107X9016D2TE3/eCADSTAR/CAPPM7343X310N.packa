@@ -1,0 +1,13 @@
+(unit MM)
+
+(package "293D107X9016D2TE3"
+    (type UNDEF)
+    (uver 2)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (utime 2024-11-15-13:35:18)
+    (mountForm default
+        (footprintRef "CAPPM7343X310N")
+        (spec "System")
+    )
+)

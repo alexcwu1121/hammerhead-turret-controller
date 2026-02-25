@@ -1,0 +1,18 @@
+.BSS138LT1G :1 ;Low Threshold Voltage; Miniature SOT-23 Surface Mount Package; RoHS Compliant
+SOT96P237X111-3N
+*STM Q
+*NGS
+*PLB 1="G" 2="S" 3="D"
+*MXP 3
+*DFN BSS138LT1G
+~!Manufacturer_Name (onsemi)
+~!Manufacturer_Part_Number (BSS138LT1G)
+~!Mouser Part Number (863-BSS138LT1G)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/onsemi/BSS138LT1G?qs=vNc2DXHODiKPZ2y3rQhTYQ%3D%3D)
+~!Arrow Part Number (BSS138LT1G)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/bss138lt1g/on-semiconductor?utm_currency=USD&region=europe)
+~!Link Datasheet (https://www.onsemi.com/pub/Collateral/BSS138LT1-D.PDF)
+~!Height (1.11mm)
+~!3D_Model (BSS138LT1G)
+BSS138LT1G
+1.1!U 2.1!U 3.1!U 

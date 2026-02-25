@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP NR6028T150M
+D Inductor Power Shielded Wirewound 15uH 20% 100KHz Ferrite 1.8A 0.1235Ohm DCR 2424 T/R
+K
+F https://www.digikey.ph/en/products/detail/taiyo-yuden/NR6028T150M/2349959?msockid=39f1ec84d77b6f4428b7f904d6676eed
+$ENDCMP
+#
+#End Doc Library

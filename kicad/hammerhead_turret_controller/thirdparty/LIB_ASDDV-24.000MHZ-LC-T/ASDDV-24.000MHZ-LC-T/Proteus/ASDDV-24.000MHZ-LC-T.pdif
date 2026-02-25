@@ -1,0 +1,108 @@
+;Proteus Design Interchange Format
+(PDIF
+ (vendor "SamacSys Limited")
+ (version 1 0)
+ (library
+  (part "ASDDV-24.000MHZ-LC-T"
+   (description "OSC XO 920MHZ 3.3V CML")
+   (family "OSC")
+   (package "AbraconASDDV")
+   (attribute "Datasheet Link" "https://abracon.com/datasheets/ASDDV.pdf")
+   (attribute "Geometry.Height" "0.95mm")
+   (attribute "Manufacturer_Name" "ABRACON")
+   (attribute "Manufacturer_Part_Number" "ASDDV-24.000MHZ-LC-T")
+   (attribute "Mouser Part Number" "815-ASDDV-2400MHZLCT")
+   (attribute "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/ABRACON/ASDDV-24000MHZ-LC-T?qs=GedFDFLaBXGt9L4G2gHaPw%3D%3D")
+   (attribute "Arrow Part Number" "ASDDV-24.000MHZ-LC-T")
+   (attribute "Arrow Price/Stock" "https://www.arrow.com/en/products/asddv-24.000mhz-lc-t/abracon?region=nac")
+   (gate
+    (symbol "ASDDV-24.000MHZ-LC-T")
+    (pin "TRI-STATE" 1 PS)
+    (pin "GND" 2 PS)
+    (pin "OUTPUT" 3 PS)
+    (pin "VDD" 4 PS)
+   )
+  )
+  (symbol "ASDDV-24.000MHZ-LC-T"
+   (units THOU)
+   (origin (pt 0 0))
+   (graphic
+    (stroke 10)
+    (path (pt 200 100) (pt 1300 100) (pt 1300 -200) (pt 200 -200) (pt 200 100) (closed))
+   )
+   (terminal
+    (body (symbol "PIN") (pt 0 -100) (rot 0) (mir 0) (visible true))
+    (name (pt 230 0) (rot 0) (just MIDDLE LEFT) (visible true))
+    (number (pt 140 20) (rot 0) (just BOTTOM RIGHT) (visible true)))
+   (terminal
+    (body (symbol "PIN") (pt 1500 -100) (rot 0) (mir X) (visible true))
+    (name (pt 230 0) (rot 0) (just MIDDLE LEFT) (visible true))
+    (number (pt 140 20) (rot 0) (just BOTTOM RIGHT) (visible true)))
+   (terminal
+    (body (symbol "PIN") (pt 1500 0) (rot 0) (mir X) (visible true))
+    (name (pt 230 0) (rot 0) (just MIDDLE LEFT) (visible true))
+    (number (pt 140 20) (rot 0) (just BOTTOM RIGHT) (visible true)))
+   (terminal
+    (body (symbol "PIN") (pt 0 0) (rot 0) (mir 0) (visible true))
+    (name (pt 230 0) (rot 0) (just MIDDLE LEFT) (visible true))
+    (number (pt 140 20) (rot 0) (just BOTTOM RIGHT) (visible true)))
+  )
+  (symbol "PIN"
+   (units THOU)
+   (origin (pt 0 0))
+   (graphic
+    (stroke 10)
+    (path (pt 0 0) (pt 200 0))))
+  (symbol "PINSHORT"
+   (units THOU)
+   (origin (pt 0 0))
+   (graphic
+    (stroke 10)
+    (path (pt 0 0) (pt 100 0))))
+  (package "AbraconASDDV"
+   (units MM)
+   (layer TASM
+    (graphic
+     (stroke 0.1)
+     (path
+      (closed true)
+      (pt -1.25 -1)
+      (pt 1.25 -1)
+      (pt 1.25 1)
+      (pt -1.25 1)
+      (pt -1.25 -1))))
+   (layer OCCA
+    (graphic
+     (stroke 0.1)
+     (path
+      (closed true)
+      (pt -2.313 2.063)
+      (pt 2.313 2.063)
+      (pt 2.313 -2.063)
+      (pt -2.313 -2.063)
+      (pt -2.313 2.063))))
+   (layer TSLK
+    (graphic
+     (stroke 0.1)
+     (path
+      (closed true)
+      (pt -0.813 -1.7)
+      (arc (pt -0.813 -1.700) (pt -0.862 -1.700) (pt -0.763 -1.600) (start 180.0) (sweep -90.0))
+      (pt -0.813 -1.6)
+      (arc (pt -0.813 -1.600) (pt -0.863 -1.700) (pt -0.762 -1.600) (start 180.0) (sweep 90.0))
+      (pt -0.813 -1.7))))
+   (leg 1 (pt -0.813 -0.612) (padstack 0))
+   (leg 2 (pt 0.813 -0.612) (padstack 0))
+   (leg 3 (pt 0.813 0.612) (padstack 0))
+   (leg 4 (pt -0.813 0.612) (padstack 0))
+   (padstack 0
+    (plated false)
+    (pad (layer TCOP) (rectf 0.900 1.000 0 0 0.000))
+   )
+   (model "ASDDV-24.000MHZ-LC-T.stp"
+    (euler 90 0 0)
+    (offset 0 0 0)
+   )
+  )
+ )
+)

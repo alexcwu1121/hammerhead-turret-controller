@@ -1,0 +1,9 @@
+Manufacturer=TAIYO YUDEN
+PartNumber=NR6028T150M
+PartCategory=Inductor
+PackageCategory=Other
+PinCount=6
+Version=1.2
+Released=2020-03-24 17:13:17
+Downloaded=2026-02-14 15:29:26
+3D=Y

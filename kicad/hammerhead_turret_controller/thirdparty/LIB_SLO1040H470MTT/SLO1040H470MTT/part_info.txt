@@ -1,0 +1,9 @@
+Manufacturer=Sunltech Tech
+PartNumber=SLO1040H470MTT
+PartCategory=Inductor
+PackageCategory=Inductors Precision Moulded
+PinCount=2
+Version=1.1
+Released=2019-11-11 05:06:34
+Downloaded=2026-02-09 03:05:43
+3D=Y

@@ -1,0 +1,120 @@
+;Proteus Design Interchange Format
+(PDIF
+ (vendor "SamacSys Limited")
+ (version 1 0)
+ (library
+  (part "NR6028T150M"
+   (description "Inductor Power Shielded Wirewound 15uH 20% 100KHz Ferrite 1.8A 0.1235Ohm DCR 2424 T/R")
+   (family "IND")
+   (package "NR6028T150M")
+   (attribute "Datasheet Link" "https://www.digikey.ph/en/products/detail/taiyo-yuden/NR6028T150M/2349959?msockid=39f1ec84d77b6f4428b7f904d6676eed")
+   (attribute "Geometry.Height" "2.8mm")
+   (attribute "Manufacturer_Name" "TAIYO YUDEN")
+   (attribute "Manufacturer_Part_Number" "NR6028T150M")
+   (attribute "Mouser Part Number" "963-NR6028T150M")
+   (attribute "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/TAIYO-YUDEN/NR6028T150M?qs=PzICbMaShUdL%2F3BKIfJt0g%3D%3D")
+   (attribute "Arrow Part Number" "NR6028T150M")
+   (attribute "Arrow Price/Stock" "https://www.arrow.com/en/products/nr6028t150m/taiyo-yuden?utm_currency=USD&region=nac")
+   (gate
+    (symbol "NR6028T150M")
+    (pin "1" 1 PS)
+    (pin "2" 2 PS)
+    (pin ""  PS)
+    (pin ""  PS)
+    (pin "Model"  PS)
+    (pin ""  PS)
+   )
+  )
+  (symbol "NR6028T150M"
+   (units THOU)
+   (origin (pt 0 0))
+   (graphic
+    (stroke 10)
+    (path (pt 200 100) (pt 600 100) (pt 600 -300) (pt 200 -300) (pt 200 100) (closed))
+   )
+   (terminal
+    (body (symbol "PIN") (pt 0 0) (rot 0) (mir 0) (visible true))
+    (name (pt 230 0) (rot 0) (just MIDDLE LEFT) (visible true))
+    (number (pt 140 20) (rot 0) (just BOTTOM RIGHT) (visible true)))
+   (terminal
+    (body (symbol "PIN") (pt 0 -100) (rot 0) (mir 0) (visible true))
+    (name (pt 230 0) (rot 0) (just MIDDLE LEFT) (visible true))
+    (number (pt 140 20) (rot 0) (just BOTTOM RIGHT) (visible true)))
+   (terminal
+    (body (symbol "PIN") (pt 0 -200) (rot 0) (mir 0) (visible true))
+    (name (pt 230 0) (rot 0) (just MIDDLE LEFT) (visible true))
+    (number (pt 140 20) (rot 0) (just BOTTOM RIGHT) (visible true)))
+   (terminal
+    (body (symbol "PIN") (pt 800 0) (rot 0) (mir X) (visible true))
+    (name (pt 230 0) (rot 0) (just MIDDLE LEFT) (visible true))
+    (number (pt 140 20) (rot 0) (just BOTTOM RIGHT) (visible true)))
+   (terminal
+    (body (symbol "PIN") (pt 800 -100) (rot 0) (mir X) (visible true))
+    (name (pt 230 0) (rot 0) (just MIDDLE LEFT) (visible true))
+    (number (pt 140 20) (rot 0) (just BOTTOM RIGHT) (visible true)))
+   (terminal
+    (body (symbol "PIN") (pt 800 -200) (rot 0) (mir X) (visible true))
+    (name (pt 230 0) (rot 0) (just MIDDLE LEFT) (visible true))
+    (number (pt 140 20) (rot 0) (just BOTTOM RIGHT) (visible true)))
+  )
+  (symbol "PIN"
+   (units THOU)
+   (origin (pt 0 0))
+   (graphic
+    (stroke 10)
+    (path (pt 0 0) (pt 200 0))))
+  (symbol "PINSHORT"
+   (units THOU)
+   (origin (pt 0 0))
+   (graphic
+    (stroke 10)
+    (path (pt 0 0) (pt 100 0))))
+  (package "NR6028T150M"
+   (units MM)
+   (layer TASM
+    (graphic
+     (stroke 0.2)
+     (path
+      (closed true)
+      (pt -3 3)
+      (pt 3 3)
+      (pt 3 -3)
+      (pt -3 -3)
+      (pt -3 3))))
+   (layer OCCA
+    (graphic
+     (stroke 0.1)
+     (path
+      (closed true)
+      (pt -4.15 4)
+      (pt 4.15 4)
+      (pt 4.15 -4)
+      (pt -4.15 -4)
+      (pt -4.15 4))))
+   (layer TSLK
+    (graphic
+     (stroke 0.1)
+     (path
+      (closed false)
+      (pt -1.4 3)
+      (pt 1.4 3))))
+   (layer TSLK
+    (graphic
+     (stroke 0.1)
+     (path
+      (closed false)
+      (pt -1.4 -3)
+      (pt 1.3 -3))))
+   (leg 1 (pt -2.350 0.000) (padstack 0))
+   (leg 2 (pt 2.350 0.000) (padstack 0))
+   (padstack 0
+    (plated false)
+    (pad (layer TCOP) (rectf 1.600 5.700 0 0 90.000))
+   )
+   (model "NR6028T150M.stp"
+    (euler 0 0 -90)
+    (offset 0 0 1.5199999809265137)
+   )
+  )
+ )
+)

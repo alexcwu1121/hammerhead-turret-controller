@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP IHLP2525CZER100M01
+D Vishay IHLP Series Type 2525 Shielded Wire-wound SMD Inductor with a Metal Composite Core, 10 uH +/-20% Wire-Wound
+K
+F https://www.vishay.com/docs/34104/ihlp-2525cz-01.pdf
+$ENDCMP
+#
+#End Doc Library

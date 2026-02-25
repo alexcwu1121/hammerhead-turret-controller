@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP ASDDV-24.000MHZ-LC-T
+D OSC XO 920MHZ 3.3V CML
+K
+F https://abracon.com/datasheets/ASDDV.pdf
+$ENDCMP
+#
+#End Doc Library

@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART '293D107X9016D2TE3'
+CLASS = DISCRETE
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "Vishay", "293D107X9016D2TE3" (!) = "", "CAPPM7343X310N", "Capacitor Moulded Polarised", "74-293D107X9016D2TE3", "https://www.mouser.co.uk/ProductDetail/Vishay-Sprague/293D107X9016D2TE3?qs=N31o%252Bt096gutRPoK822F8w%3D%3D", "293D107X9016D2TE3", "https://www.arrow.com/en/products/293d107x9016d2te3/vishay?region=nac", "Capacitor Tantalum SMT 293D 16V 100uF Vishay 100uF SMD Solid MnO2 Tantalum Electrolytic Capacitor, 16 V dc +/-10%, 293D Series", "http://www.vishay.com/docs/40002/293d.pdf", "3.1 mm"
+END_PART
+
+END.

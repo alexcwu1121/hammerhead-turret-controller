@@ -1,0 +1,13 @@
+(unit MM)
+
+(package "DMP2045U-7"
+    (type UNDEF)
+    (uver 2)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (utime 2024-04-04-11:08:08)
+    (mountForm default
+        (footprintRef "SOT96P240X115-3N")
+        (spec "System")
+    )
+)

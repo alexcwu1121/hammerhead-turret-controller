@@ -1,0 +1,18 @@
+.LM3485MMX_NOPB :1 ;4.5-35V, Hysteretic Non-Synchronous PFET Buck Controller
+SOP65P490X110-8N
+*STM IC
+*NGS
+*PLB 1="ISENSE" 2="GND" 3="NC" 4="FB" 5="ADJ" 6="PWR GND" 7="PGATE" 8="VIN"
+*MXP 8
+*DFN LM3485MMX_NOPB
+~!Manufacturer_Name (Texas Instruments)
+~!Manufacturer_Part_Number (LM3485MMX/NOPB)
+~!Mouser Part Number (926-LM3485MMX/NOPB)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/Texas-Instruments/LM3485MMX-NOPB?qs=X1J7HmVL2ZGdhzJdAW27lw%3D%3D)
+~!Arrow Part Number (LM3485MMX/NOPB)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/lm3485mmxnopb/texas-instruments?utm_currency=USD&region=nac)
+~!Link Datasheet (http://www.ti.com/lit/gpn/lm3485)
+~!Height (1.1mm)
+~!3D_Model (LM3485MMX_NOPB)
+LM3485MMX_NOPB
+1.1!U 2.1!U 3.1!U 4.1!U 8.1!U 7.1!U 6.1!U 5.1!U 

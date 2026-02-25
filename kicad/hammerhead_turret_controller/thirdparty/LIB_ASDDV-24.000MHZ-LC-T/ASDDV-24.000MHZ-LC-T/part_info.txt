@@ -1,0 +1,9 @@
+Manufacturer=ABRACON
+PartNumber=ASDDV-24.000MHZ-LC-T
+PartCategory=Crystal or Oscillator
+PackageCategory=Other
+PinCount=4
+Version=4.1
+Released=2023-05-02 15:09:21
+Downloaded=2026-02-08 04:58:08
+3D=Y

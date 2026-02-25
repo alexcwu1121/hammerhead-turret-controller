@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--/13445364/1805047/2.50/4/2/Crystal or Oscillator/-->
+<quadcept_library>
+  <setting unit="mil" />
+  <textstyle name="Default" height="47.244094488189" strokewidth="7.8740157480315" charwidth="47.244094488189" />
+  <textstyle name="Dimension" height="19.6850393700787" strokewidth="0" charwidth="19.6850393700787" />
+  <textstyle name="H127W0635TH00762" height="50" strokewidth="3" charwidth="25" />
+  <textstyle name="H15W15TH02" height="59.0551181102362" strokewidth="7.8740157480315" charwidth="59.0551181102362" />
+  <padstyle name="r100_90" surface="True" plated="False" isvia="False" nopaste="False" nomask="True" complex="False" holesize="0">
+    <padshape layer="TOP" shape="rectangle" width="35.433070866141" height="39.370078740157" />
+    <padshape layer="TOP_SOLDER_MASK" shape="rectangle" width="43.307086614173" height="47.244094488188" />
+    <padshape layer="TOP_SOLDER_PASTE" shape="rectangle" width="35.433070866141" height="39.370078740157" />
+  </padstyle>
+  <footprint name="AbraconASDDV" originx="0" originy="0" pickpointx="0" pickpointy="0">
+    <pcbpin number="1" name="1" style="r100_90" originx="-32.007874015748" originy="-24.094488188976" rotation="90" />
+    <pcbpin number="2" name="2" style="r100_90" originx="32.007874015748" originy="-24.094488188976" rotation="90" />
+    <pcbpin number="3" name="3" style="r100_90" originx="32.007874015748" originy="24.094488188976" rotation="90" />
+    <pcbpin number="4" name="4" style="r100_90" originx="-32.007874015748" originy="24.094488188976" rotation="90" />
+    <line layer="TOP_ASSEMBLY" originx="-49.212598425196" originy="-39.370078740157" endx="49.212598425196" endy="-39.370078740157" width="3.9370078740157" />
+    <line layer="TOP_ASSEMBLY" originx="49.212598425196" originy="-39.370078740157" endx="49.212598425196" endy="39.370078740157" width="3.9370078740157" />
+    <line layer="TOP_ASSEMBLY" originx="49.212598425196" originy="39.370078740157" endx="-49.212598425196" endy="39.370078740157" width="3.9370078740157" />
+    <line layer="TOP_ASSEMBLY" originx="-49.212598425196" originy="39.370078740157" endx="-49.212598425196" endy="-39.370078740157" width="3.9370078740157" />
+    <line layer="TOP_PLACE_BOUND" originx="-91.062992125983" originy="81.220472440944" endx="91.062992125983" endy="81.220472440944" width="3.9370078740157" />
+    <line layer="TOP_PLACE_BOUND" originx="91.062992125983" originy="81.220472440944" endx="91.062992125983" endy="-81.220472440944" width="3.9370078740157" />
+    <line layer="TOP_PLACE_BOUND" originx="91.062992125983" originy="-81.220472440944" endx="-91.062992125983" endy="-81.220472440944" width="3.9370078740157" />
+    <line layer="TOP_PLACE_BOUND" originx="-91.062992125983" originy="-81.220472440944" endx="-91.062992125983" endy="81.220472440944" width="3.9370078740157" />
+    <line layer="TOP_SILKSCREEN" originx="-32.007874015748" originy="-66.929133858267" endx="-32.007874015748" endy="-66.929133858267" width="3.9370078740157" />
+    <arc layer="TOP_SILKSCREEN" originx="-31.968503937007" originy="-64.960629921259" startangle="-90.0" sweepangle="180.0" radius="1.9685039370078" width="3.9370078740157" />
+    <line layer="TOP_SILKSCREEN" originx="-32.007874015748" originy="-62.992125984251" endx="-32.007874015748" endy="-62.992125984251" width="3.9370078740157" />
+    <arc layer="TOP_SILKSCREEN" originx="-32.007874015748" originy="-64.960629921259" startangle="90.0" sweepangle="180.0" radius="1.9685039370078" width="3.9370078740157" />
+  </footprint>
+  <symbol name="ASDDV-24.000MHZ-LC-T" originx="0" originy="0">
+    <line originx="200" originy="100" endx="1300" endy="100" width="0" />
+    <line originx="1300" originy="-200" endx="1300" endy="100" width="0" />
+    <line originx="1300" originy="-200" endx="200" endy="-200" width="0" />
+    <line originx="200" originy="100" endx="200" endy="-200" width="0" />
+    <sympin number="1" originx="200" originy="-100" rotation="180" length="100" width="7.8740157480315" flipped="False">
+      <text name="pinname" originx="230" originy="-100" style="Default" rotation="0" justify="left" flipped="False" hidden="False" data="TRI-STATE" />
+      <text name="pindes" originx="140" originy="-80" style="Default" rotation="0" justify="lowerright" flipped="False" hidden="False" data="1" />
+    </sympin>
+    <sympin number="2" originx="1300" originy="-100" rotation="0" length="100" width="7.8740157480315" flipped="False">
+      <text name="pinname" originx="1270" originy="-100" style="Default" rotation="0" justify="right" flipped="False" hidden="False" data="GND" />
+      <text name="pindes" originx="1360" originy="-80" style="Default" rotation="0" justify="lowerleft" flipped="False" hidden="False" data="2" />
+    </sympin>
+    <sympin number="3" originx="1300" originy="0" rotation="0" length="100" width="7.8740157480315" flipped="False">
+      <text name="pinname" originx="1270" originy="0" style="Default" rotation="0" justify="right" flipped="False" hidden="False" data="OUTPUT" />
+      <text name="pindes" originx="1360" originy="20" style="Default" rotation="0" justify="lowerleft" flipped="False" hidden="False" data="3" />
+    </sympin>
+    <sympin number="4" originx="200" originy="0" rotation="180" length="100" width="7.8740157480315" flipped="False">
+      <text name="pinname" originx="230" originy="0" style="Default" rotation="0" justify="left" flipped="False" hidden="False" data="VDD" />
+      <text name="pindes" originx="140" originy="20" style="Default" rotation="0" justify="lowerright" flipped="False" hidden="False" data="4" />
+    </sympin>
+  </symbol>
+  <component name="ASDDV-24.000MHZ-LC-T" designatorprefix="Y" height="37.401574803149" footprint="AbraconASDDV">
+    <comppin designator="1" sympin="1" pinswap="0" gateswap="0" gate="1" group="1" side="" type="Any" name="TRI-STATE" />
+    <comppin designator="2" sympin="2" pinswap="0" gateswap="0" gate="1" group="1" side="" type="Any" name="GND" />
+    <comppin designator="3" sympin="3" pinswap="0" gateswap="0" gate="1" group="1" side="" type="Any" name="OUTPUT" />
+    <comppin designator="4" sympin="4" pinswap="0" gateswap="0" gate="1" group="1" side="" type="Any" name="VDD" />
+    <attached_symbol gate="1" name="ASDDV-24.000MHZ-LC-T" />
+    <pinmap designator="1" footprintpin="1" />
+    <pinmap designator="2" footprintpin="2" />
+    <pinmap designator="3" footprintpin="3" />
+    <pinmap designator="4" footprintpin="4" />
+    <text name="Datasheet" originx="0" originy="0" style="Default" rotation="0" justify="" flipped="False" hidden="True" data="https://abracon.com/datasheets/ASDDV.pdf" />
+    <text name="Description" originx="0" originy="0" style="Default" rotation="0" justify="" flipped="False" hidden="True" data="OSC XO 920MHZ 3.3V CML" />
+    <text name="Manufacturer_Name" originx="0" originy="0" style="Default" rotation="0" justify="" flipped="False" hidden="True" data="ABRACON" />
+    <text name="Manufacturer_Part_Number" originx="1350" originy="200" style="Default" rotation="0" justify="left" flipped="False" hidden="False" data="ASDDV-24.000MHZ-LC-T" />
+    <text name="Mouser Part Number" originx="0" originy="0" style="Default" rotation="0" justify="" flipped="False" hidden="True" data="815-ASDDV-2400MHZLCT" />
+    <text name="Mouser Price/Stock" originx="0" originy="0" style="Default" rotation="0" justify="" flipped="False" hidden="True" data="https://www.mouser.co.uk/ProductDetail/ABRACON/ASDDV-24000MHZ-LC-T?qs=GedFDFLaBXGt9L4G2gHaPw%3D%3D" />
+    <text name="Arrow Part Number" originx="0" originy="0" style="Default" rotation="0" justify="" flipped="False" hidden="True" data="ASDDV-24.000MHZ-LC-T" />
+    <text name="Arrow Price/Stock" originx="0" originy="0" style="Default" rotation="0" justify="" flipped="False" hidden="True" data="https://www.arrow.com/en/products/asddv-24.000mhz-lc-t/abracon?region=nac" />
+  </component>
+</quadcept_library>

@@ -1,0 +1,18 @@
+.IHLP2525CZER100M01 :1 ;Vishay IHLP Series Type 2525 Shielded Wire-wound SMD Inductor with a Metal Composite Core, 10 uH +/-20% Wire-Wound
+INDPM6965X300N
+*STM L
+*NGS
+*PLB 1="1" 2="2"
+*MXP 2
+*DFN IHLP2525CZER100M01
+~!Manufacturer_Name (Vishay)
+~!Manufacturer_Part_Number (IHLP2525CZER100M01)
+~!Mouser Part Number (70-IHLP2525CZER100M0)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/Vishay-Dale/IHLP2525CZER100M01?qs=PA%252BPfIdQ8xl3JLrMc5InbA%3D%3D)
+~!Arrow Part Number (IHLP2525CZER100M01)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/ihlp2525czer100m01/vishay?utm_currency=USD&region=nac)
+~!Link Datasheet (https://www.vishay.com/docs/34104/ihlp-2525cz-01.pdf)
+~!Height (3mm)
+~!3D_Model (IHLP2525CZER100M01)
+IHLP2525CZER100M01
+1.1!U 2.1!U 

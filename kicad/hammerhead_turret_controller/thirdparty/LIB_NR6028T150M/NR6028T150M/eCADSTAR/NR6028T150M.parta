@@ -1,0 +1,68 @@
+(Japanese_coding: sjis)
+(function "ECS_1049401"
+    (uver 1)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (ctime 2020-03-24-17:13:17)
+    (utime 2025-02-12-10:48:11)
+    (interface
+        (port "1" (symbPinId 1) (portType INOUT))
+        (port "2" (symbPinId 2) (portType INOUT))
+    )
+    (property "symbolName" "NR6028T150M")
+)
+
+
+(pinAssign "ECS_1049401"
+    (uver 1)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (ctime 2020-03-24-17:13:17)
+    (utime 2025-02-12-10:48:11)
+    (interface
+        (port "1" (symbPinId 1) (portName "1") (portType INOUT))
+        (port "2" (symbPinId 2) (portName "2") (portType INOUT))
+    )
+    (internal
+        (funcInst (functionRef "ECS_1049401")
+                (port "1" (match "1"))
+                (port "2" (match "2"))
+        )
+    )
+    (property "usePowerBox" "No")
+    (property "symbolName" "NR6028T150M")
+)
+
+
+(part "NR6028T150M"
+    (uver 1)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (ctime 2020-03-24-17:13:17)
+    (utime 2025-02-12-10:48:11)
+    (packageRef "NR6028T150M")
+    (pinAssignRef "ECS_1049401")
+    (interface
+        (port "1" (symbPinId 1) (portName "1") (portType INOUT))
+        (port "2" (symbPinId 2) (portName "2") (portType INOUT))
+    )
+    (partClass UNDEF)
+    (useInSchema Y)
+    (useInLayout Y)
+    (inPartsList Y)
+    (partType NORMAL)
+    (placeRestriction FREE)
+    (property "enetNonSeries" "NO")
+    (property "refDesPrefix" "L")
+    (property "description" "Inductor Power Shielded Wirewound 15uH 20% 100KHz Ferrite 1.8A 0.1235Ohm DCR 2424 T/R")
+    (property "Manufacturer_Name" "TAIYO YUDEN")
+    (property "Manufacturer_Part_Number" "NR6028T150M")
+    (property "Mouser_Part_Number" "963-NR6028T150M")
+    (property "Mouser_Price/Stock" "https://www.mouser.co.uk/ProductDetail/TAIYO-YUDEN/NR6028T150M?qs=PzICbMaShUdL%2F3BKIfJt0g%3D%3D")
+    (property "Arrow_Part_Number" "NR6028T150M")
+    (property "Arrow_Price/Stock" "https://www.arrow.com/en/products/nr6028t150m/taiyo-yuden?utm_currency=USD&region=nac")
+    (property "Datasheet_Link" "https://www.digikey.ph/en/products/detail/taiyo-yuden/NR6028T150M/2349959?msockid=39f1ec84d77b6f4428b7f904d6676eed")
+    (property "compAreaTopHeight" 2.8)
+)
+
+

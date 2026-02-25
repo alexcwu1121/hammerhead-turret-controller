@@ -1,0 +1,13 @@
+(unit MM)
+
+(package "STM32F302CBT6"
+    (type UNDEF)
+    (uver 2)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (utime 2019-07-20-12:49:06)
+    (mountForm default
+        (footprintRef "QFP50P900X900X160-48N")
+        (spec "System")
+    )
+)

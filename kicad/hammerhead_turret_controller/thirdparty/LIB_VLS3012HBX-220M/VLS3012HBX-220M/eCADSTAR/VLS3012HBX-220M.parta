@@ -1,0 +1,67 @@
+(Japanese_coding: sjis)
+(function "ECS_970393"
+    (uver 1)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (ctime 2017-10-27-12:29:03)
+    (utime 2023-03-07-16:10:32)
+    (interface
+        (port "1" (symbPinId 1) (portType INOUT))
+        (port "2" (symbPinId 2) (portType INOUT))
+    )
+    (property "symbolName" "VLS3012HBX-220M")
+)
+
+
+(pinAssign "ECS_970393"
+    (uver 1)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (ctime 2017-10-27-12:29:03)
+    (utime 2023-03-07-16:10:32)
+    (interface
+        (port "1" (symbPinId 1) (portName "1") (portType INOUT))
+        (port "2" (symbPinId 2) (portName "2") (portType INOUT))
+    )
+    (internal
+        (funcInst (functionRef "ECS_970393")
+                (port "1" (match "1"))
+                (port "2" (match "2"))
+        )
+    )
+    (property "usePowerBox" "No")
+    (property "symbolName" "VLS3012HBX-220M")
+)
+
+
+(part "VLS3012HBX-220M"
+    (uver 1)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (ctime 2017-10-27-12:29:03)
+    (utime 2023-03-07-16:10:32)
+    (packageRef "VLS3012HBX-220M")
+    (pinAssignRef "ECS_970393")
+    (interface
+        (port "1" (symbPinId 1) (portName "1") (portType INOUT))
+        (port "2" (symbPinId 2) (portName "2") (portType INOUT))
+    )
+    (partClass UNDEF)
+    (useInSchema Y)
+    (useInLayout Y)
+    (inPartsList Y)
+    (partType NORMAL)
+    (placeRestriction FREE)
+    (property "enetNonSeries" "NO")
+    (property "refDesPrefix" "L")
+    (property "description" "Fixed Inductors 3x3x1.2mm 22uH 20% Magnetic Power Inductor")
+    (property "Manufacturer_Name" "TDK")
+    (property "Manufacturer_Part_Number" "VLS3012HBX-220M")
+    (property "Mouser_Part_Number" "810-VLS3012HBX-220M")
+    (property "Mouser_Price/Stock" "https://www.mouser.co.uk/ProductDetail/TDK/VLS3012HBX-220M?qs=pfd5qewlna6PjmR%252BRPDvXw%3D%3D")
+    (property "Arrow_Part_Number" "VLS3012HBX-220M")
+    (property "Arrow_Price/Stock" "https://www.arrow.com/en/products/vls3012hbx-220m/tdk?utm_currency=USD&region=nac")
+    (property "Datasheet_Link" "https://product.tdk.com/system/files/dam/doc/product/inductor/inductor/smd/catalog/inductor_commercial_power_vls3012hbx_en.pdf")
+)
+
+

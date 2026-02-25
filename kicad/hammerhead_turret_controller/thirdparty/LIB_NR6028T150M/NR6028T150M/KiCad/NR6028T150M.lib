@@ -1,0 +1,29 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#SamacSys ECAD Model NR6028T150M
+#/1049401/1805047/2.50/6/4/Inductor
+DEF NR6028T150M L 0 30 Y Y 1 F N
+F0 "L" 650 300 50 H V L CNN
+F1 "NR6028T150M" 650 200 50 H V L CNN
+F2 "NR6028T150M" 650 100 50 H I L CNN
+F3 "https://www.digikey.ph/en/products/detail/taiyo-yuden/NR6028T150M/2349959?msockid=39f1ec84d77b6f4428b7f904d6676eed" 650 0 50 H I L CNN
+F4 "Inductor Power Shielded Wirewound 15uH 20% 100KHz Ferrite 1.8A 0.1235Ohm DCR 2424 T/R" 650 -100 50 H I L CNN "Description"
+F5 "2.8" 650 -200 50 H I L CNN "Height"
+F6 "TAIYO YUDEN" 650 -300 50 H I L CNN "Manufacturer_Name"
+F7 "NR6028T150M" 650 -400 50 H I L CNN "Manufacturer_Part_Number"
+F8 "963-NR6028T150M" 650 -500 50 H I L CNN "Mouser Part Number"
+F9 "https://www.mouser.co.uk/ProductDetail/TAIYO-YUDEN/NR6028T150M?qs=PzICbMaShUdL%2F3BKIfJt0g%3D%3D" 650 -600 50 H I L CNN "Mouser Price/Stock"
+F10 "NR6028T150M" 650 -700 50 H I L CNN "Arrow Part Number"
+F11 "https://www.arrow.com/en/products/nr6028t150m/taiyo-yuden?utm_currency=USD&region=nac" 650 -800 50 H I L CNN "Arrow Price/Stock"
+DRAW
+X 1 1 0 0 200 R 50 50 0 0 P
+X 2 2 0 -100 200 R 50 50 0 0 P
+X   0 -200 200 R 50 50 0 0 P
+X   800 0 200 L 50 50 0 0 P
+X Model  800 -100 200 L 50 50 0 0 P
+X   800 -200 200 L 50 50 0 0 P
+P 5 0 1 6 200 100 600 100 600 -300 200 -300 200 100 N
+ENDDRAW
+ENDDEF
+#
+#End Library

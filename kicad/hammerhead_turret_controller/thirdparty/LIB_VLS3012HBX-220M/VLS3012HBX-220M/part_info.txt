@@ -1,0 +1,9 @@
+Manufacturer=TDK
+PartNumber=VLS3012HBX-220M
+PartCategory=Inductor
+PackageCategory=Other
+PinCount=2
+Version=4.1
+Released=2017-10-27 12:29:03
+Downloaded=2026-02-13 00:06:13
+3D=Y

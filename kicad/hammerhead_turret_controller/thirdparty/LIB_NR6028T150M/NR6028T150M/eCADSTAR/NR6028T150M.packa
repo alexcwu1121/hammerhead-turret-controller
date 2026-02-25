@@ -1,0 +1,13 @@
+(unit MM)
+
+(package "NR6028T150M"
+    (type UNDEF)
+    (uver 2)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (utime 2020-03-24-17:13:17)
+    (mountForm default
+        (footprintRef "NR6028T150M")
+        (spec "System")
+    )
+)

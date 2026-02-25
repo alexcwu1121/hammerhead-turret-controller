@@ -1,0 +1,18 @@
+.1N5819HW-7-F :1 ;Diode Schottky 1A 40V SOD123 Diodes Inc 1N5819HW-7-F, SMT Schottky Diode, 40V 1A, 2-Pin SOD-123
+SOD3716X145N
+*STM D
+*NGS
+*PLB 1="K" 2="A"
+*MXP 2
+*DFN 1N5819HW-7-F
+~!Manufacturer_Name (Diodes Incorporated)
+~!Manufacturer_Part_Number (1N5819HW-7-F)
+~!Mouser Part Number (621-1N5819HW-F)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/Diodes-Incorporated/1N5819HW-7-F?qs=NQ47qNm99eDyWTEd07miYA%3D%3D)
+~!Arrow Part Number (1N5819HW-7-F)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/1n5819hw-7-f/diodes-incorporated?utm_currency=USD&region=nac)
+~!Link Datasheet (https://www.diodes.com//assets/Datasheets/1N5819HW.pdf)
+~!Height (1.45mm)
+~!3D_Model (1N5819HW-7-F)
+"1N5819HW-7-F"
+1.1!U 2.1!U 

@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'SLO1040H470MTT'
+CLASS = DISCRETE
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "Sunltech Tech", "SLO1040H470MTT" (!) = "", "INDPM108100X400N", "Inductors Precision Moulded", "", "", "", "", "SMD,10.8x10x4mm Power Inductors RoHS", "https://datasheet.lcsc.com/szlcsc/1809291208_Sunltech-Tech-SLO1040H470MTT_C182153.pdf", "4 mm"
+END_PART
+
+END.

@@ -1,0 +1,18 @@
+.TPS54202DDCR :1 ;4.5V to 28V Input, 2A Output, EMI Friendly Synchronous Step-Down Converter
+SOT95P280X110-6N
+*STM PS
+*NGS
+*PLB 1="GND" 2="SW" 3="VIN" 4="FB" 5="EN" 6="BOOT"
+*MXP 6
+*DFN TPS54202DDCR
+~!Manufacturer_Name (Texas Instruments)
+~!Manufacturer_Part_Number (TPS54202DDCR)
+~!Mouser Part Number (595-TPS54202DDCR)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/Texas-Instruments/TPS54202DDCR?qs=uP22XH7NdCsJtN%2Fq54jCtQ%3D%3D)
+~!Arrow Part Number (TPS54202DDCR)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/tps54202ddcr/texas-instruments?utm_currency=USD&region=nac)
+~!Link Datasheet (http://www.ti.com/lit/gpn/tps54202)
+~!Height (1.1mm)
+~!3D_Model (TPS54202DDCR)
+TPS54202DDCR
+1.1!G 2.1!Y 3.1!P 6.1!Y 5.1!I 4.1!I 

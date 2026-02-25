@@ -1,0 +1,9 @@
+Manufacturer=Diodes Incorporated
+PartNumber=1N5819HW-7-F
+PartCategory=Diode
+PackageCategory=Small Outline Diode
+PinCount=2
+Version=6.1
+Released=2016-04-07 08:01:50
+Downloaded=2026-02-13 00:28:02
+3D=Y

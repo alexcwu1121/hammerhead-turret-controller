@@ -1,0 +1,18 @@
+.ASDDV-24.000MHZ-LC-T :1 ;OSC XO 920MHZ 3.3V CML
+AbraconASDDV
+*STM Y
+*NGS
+*PLB 1="TRI-STATE" 2="GND" 3="OUTPUT" 4="VDD"
+*MXP 4
+*DFN ASDDV-24.000MHZ-LC-T
+~!Manufacturer_Name (ABRACON)
+~!Manufacturer_Part_Number (ASDDV-24.000MHZ-LC-T)
+~!Mouser Part Number (815-ASDDV-2400MHZLCT)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/ABRACON/ASDDV-24000MHZ-LC-T?qs=GedFDFLaBXGt9L4G2gHaPw%3D%3D)
+~!Arrow Part Number (ASDDV-24.000MHZ-LC-T)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/asddv-24.000mhz-lc-t/abracon?region=nac)
+~!Link Datasheet (https://abracon.com/datasheets/ASDDV.pdf)
+~!Height (0.95mm)
+~!3D_Model (ASDDV-24.000MHZ-LC-T)
+ASDDV-24.000MHZ-LC-T
+1.1!U 2.1!U 3.1!U 4.1!U 

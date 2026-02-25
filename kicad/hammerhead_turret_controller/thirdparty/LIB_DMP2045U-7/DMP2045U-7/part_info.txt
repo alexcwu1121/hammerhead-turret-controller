@@ -1,0 +1,9 @@
+Manufacturer=Diodes Incorporated
+PartNumber=DMP2045U-7
+PartCategory=MOSFET (P-Channel)
+PackageCategory=SOT23 (3-Pin)
+PinCount=3
+Version=5.1
+Released=2019-06-25 03:40:51
+Downloaded=2026-02-12 23:52:29
+3D=Y

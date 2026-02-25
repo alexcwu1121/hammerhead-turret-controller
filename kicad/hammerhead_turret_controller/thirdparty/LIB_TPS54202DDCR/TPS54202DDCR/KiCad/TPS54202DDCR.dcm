@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP TPS54202DDCR
+D 4.5V to 28V Input, 2A Output, EMI Friendly Synchronous Step-Down Converter
+K
+F http://www.ti.com/lit/gpn/tps54202
+$ENDCMP
+#
+#End Doc Library

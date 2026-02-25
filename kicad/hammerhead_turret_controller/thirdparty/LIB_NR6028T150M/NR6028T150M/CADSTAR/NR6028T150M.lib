@@ -1,0 +1,18 @@
+.NR6028T150M :1 ;Inductor Power Shielded Wirewound 15uH 20% 100KHz Ferrite 1.8A 0.1235Ohm DCR 2424 T/R
+NR6028T150M
+*STM L
+*NGS
+*PLB 1="1" 2="2"
+*MXP 2
+*DFN NR6028T150M
+~!Manufacturer_Name (TAIYO YUDEN)
+~!Manufacturer_Part_Number (NR6028T150M)
+~!Mouser Part Number (963-NR6028T150M)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/TAIYO-YUDEN/NR6028T150M?qs=PzICbMaShUdL%2F3BKIfJt0g%3D%3D)
+~!Arrow Part Number (NR6028T150M)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/nr6028t150m/taiyo-yuden?utm_currency=USD&region=nac)
+~!Link Datasheet (https://www.digikey.ph/en/products/detail/taiyo-yuden/NR6028T150M/2349959?msockid=39f1ec84d77b6f4428b7f904d6676eed)
+~!Height (2.8mm)
+~!3D_Model (NR6028T150M)
+NR6028T150M
+1.1!U 2.1!U 

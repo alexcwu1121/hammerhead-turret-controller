@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'LM3485MMX_NOPB'
+CLASS = IC
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "Texas Instruments", "LM3485MMX/NOPB" (!) = "", "SOP65P490X110-8N", "Small Outline Packages", "926-LM3485MMX/NOPB", "https://www.mouser.co.uk/ProductDetail/Texas-Instruments/LM3485MMX-NOPB?qs=X1J7HmVL2ZGdhzJdAW27lw%3D%3D", "LM3485MMX/NOPB", "https://www.arrow.com/en/products/lm3485mmxnopb/texas-instruments?utm_currency=USD&region=nac", "4.5-35V, Hysteretic Non-Synchronous PFET Buck Controller", "http://www.ti.com/lit/gpn/lm3485", "1.1 mm"
+END_PART
+
+END.

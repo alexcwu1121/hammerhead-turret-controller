@@ -1,0 +1,13 @@
+(unit MM)
+
+(package "SLO1040H470MTT"
+    (type UNDEF)
+    (uver 2)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (utime 2019-11-11-05:06:34)
+    (mountForm default
+        (footprintRef "INDPM108100X400N")
+        (spec "System")
+    )
+)

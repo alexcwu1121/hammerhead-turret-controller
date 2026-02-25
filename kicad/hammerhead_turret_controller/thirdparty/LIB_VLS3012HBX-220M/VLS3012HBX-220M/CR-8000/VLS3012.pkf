@@ -1,0 +1,10 @@
+(unit MM)
+
+(package "VLS3012"
+    (type UNDEF)
+    (uver 2)
+    (mountForm default
+        (footprintRef "VLS3012")
+        (spec "default")
+    )
+)
