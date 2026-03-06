@@ -1,0 +1,3 @@
+[submodule "htc/qpcpp"]
+	path = htc/qpcpp
+	url = https://github.com/QuantumLeaps/qpcpp.git
