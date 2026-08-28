@@ -30,4 +30,8 @@
   (lib (name "TPS54202DDCR")(type "KiCad")(uri "${KIPRJMOD}/thirdparty/LIB_TPS54202DDCR/TPS54202DDCR/KiCad")(options "")(descr ""))
   (lib (name "NR6028T150M")(type "KiCad")(uri "${KIPRJMOD}/thirdparty/LIB_NR6028T150M/NR6028T150M/KiCad")(options "")(descr ""))
   (lib (name "BSS138LT1G")(type "KiCad")(uri "${KIPRJMOD}/thirdparty/LIB_BSS138LT1G/BSS138LT1G/KiCad")(options "")(descr ""))
+  (lib (name "TCAN337DR")(type "KiCad")(uri "${KIPRJMOD}/thirdparty/TCAN337DR/KiCADv6/footprints.pretty")(options "")(descr ""))
+  (lib (name "436500427")(type "KiCad")(uri "${KIPRJMOD}/thirdparty/436500427/KiCADv6/footprints.pretty")(options "")(descr ""))
+  (lib (name "430450812")(type "KiCad")(uri "${KIPRJMOD}/thirdparty/430450812/KiCADv6/footprints.pretty")(options "")(descr ""))
+  (lib (name "3314J-1-103E")(type "KiCad")(uri "${KIPRJMOD}/thirdparty/3314J-1-103E")(options "")(descr ""))
 )

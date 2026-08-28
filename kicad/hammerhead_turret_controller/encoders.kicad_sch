@@ -3450,7 +3450,7 @@
 			(uuid "cc5040ed-8864-41a4-8364-14f01a87458b")
 		)
 		(instances
-			(project ""
+			(project "hammerhead_turret_controller"
 				(path "/28590d3f-7223-4dd1-9b76-1216899ace6a/5ddfba3f-3be7-46b3-b8db-c1899049b1fc"
 					(reference "R10")
 					(unit 1)
@@ -3807,7 +3807,7 @@
 			(uuid "b636230c-40a1-4aba-b4ea-fc505f152e4b")
 		)
 		(instances
-			(project ""
+			(project "hammerhead_turret_controller"
 				(path "/28590d3f-7223-4dd1-9b76-1216899ace6a/5ddfba3f-3be7-46b3-b8db-c1899049b1fc"
 					(reference "Q1")
 					(unit 1)

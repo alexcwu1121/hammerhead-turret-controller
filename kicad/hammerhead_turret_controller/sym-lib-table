@@ -29,4 +29,8 @@
   (lib (name "TPS54202DDCR")(type "KiCad")(uri "${KIPRJMOD}/thirdparty/LIB_TPS54202DDCR/TPS54202DDCR/KiCad/TPS54202DDCR.kicad_sym")(options "")(descr ""))
   (lib (name "NR6028T150M")(type "KiCad")(uri "${KIPRJMOD}/thirdparty/LIB_NR6028T150M/NR6028T150M/KiCad/NR6028T150M.kicad_sym")(options "")(descr ""))
   (lib (name "BSS138LT1G")(type "KiCad")(uri "${KIPRJMOD}/thirdparty/LIB_BSS138LT1G/BSS138LT1G/KiCad/BSS138LT1G.kicad_sym")(options "")(descr ""))
+  (lib (name "TCAN337DR")(type "KiCad")(uri "${KIPRJMOD}/thirdparty/TCAN337DR/KiCADv6/2026-08-21_03-21-10.kicad_sym")(options "")(descr ""))
+  (lib (name "436500427")(type "KiCad")(uri "${KIPRJMOD}/thirdparty/436500427/KiCADv6/2026-08-21_00-04-01.kicad_sym")(options "")(descr ""))
+  (lib (name "430450812")(type "KiCad")(uri "${KIPRJMOD}/thirdparty/430450812/KiCADv6/2026-08-27_02-21-11.kicad_sym")(options "")(descr ""))
+  (lib (name "3314J-1-103E")(type "KiCad")(uri "${KIPRJMOD}/thirdparty/3314J-1-103E/3314J-1-103E.kicad_sym")(options "")(descr ""))
 )

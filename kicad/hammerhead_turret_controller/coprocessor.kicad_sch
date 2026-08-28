@@ -2220,10 +2220,6 @@
 		(uuid "12ade4c3-d343-442b-8381-9dd72dabcf61")
 	)
 	(no_connect
-		(at 142.24 57.15)
-		(uuid "13f6c3cb-0d54-42ad-a62f-468ffb8bbc35")
-	)
-	(no_connect
 		(at 142.24 119.38)
 		(uuid "2cd5965a-2e99-4416-ac1a-42ebc6236e9e")
 	)
@@ -2236,16 +2232,16 @@
 		(uuid "6006f8ec-35d8-4e3b-8d80-d16d5b130c6e")
 	)
 	(no_connect
+		(at 142.24 85.09)
+		(uuid "65b88377-19ef-4d5d-a966-4caa8ea294aa")
+	)
+	(no_connect
 		(at 185.42 76.2)
 		(uuid "8df13e1b-d55d-41bf-9680-2e14ade7c045")
 	)
 	(no_connect
-		(at 142.24 54.61)
-		(uuid "d923eef3-2230-42a5-be2d-56ab08c56c8b")
-	)
-	(no_connect
-		(at 142.24 59.69)
-		(uuid "e26cdc19-465d-4d91-adfc-6e099f3bc39a")
+		(at 142.24 82.55)
+		(uuid "b5c7a51d-4c8e-4dbb-8b0c-8ba6a7f55741")
 	)
 	(wire
 		(pts
@@ -2586,16 +2582,6 @@
 			(type default)
 		)
 		(uuid "5b383737-08ba-41ee-96e6-3fcf871df40a")
-	)
-	(wire
-		(pts
-			(xy 128.27 82.55) (xy 142.24 82.55)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5c6f30cd-2582-43d3-9b11-c1f3635e1795")
 	)
 	(wire
 		(pts
@@ -2979,6 +2965,26 @@
 	)
 	(wire
 		(pts
+			(xy 129.54 54.61) (xy 142.24 54.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cc80b09d-00f7-4025-99f1-a59dfe6257bf")
+	)
+	(wire
+		(pts
+			(xy 129.54 57.15) (xy 142.24 57.15)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cde9bc8e-11f0-4422-b4cf-01ee344b4611")
+	)
+	(wire
+		(pts
 			(xy 128.27 132.08) (xy 142.24 132.08)
 		)
 		(stroke
@@ -3019,13 +3025,13 @@
 	)
 	(wire
 		(pts
-			(xy 128.27 85.09) (xy 142.24 85.09)
+			(xy 129.54 59.69) (xy 142.24 59.69)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "e23229f5-5d72-4032-8f95-421378aa9a53")
+		(uuid "e507844b-5258-4998-ad1c-7d2a1a92ae79")
 	)
 	(wire
 		(pts
@@ -3137,6 +3143,16 @@
 		)
 		(uuid "199ca5a5-6380-4347-aa90-fcd9ca1b68e6")
 	)
+	(label "CAN_TX"
+		(at 132.08 59.69 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "2b59c4e5-f594-48b0-b636-c19d99d36ccf")
+	)
 	(label "PAN_MS3"
 		(at 132.08 44.45 0)
 		(effects
@@ -3176,6 +3192,16 @@
 			(justify left bottom)
 		)
 		(uuid "3e8342df-8a99-4f6a-b7a4-f20807c55800")
+	)
+	(label "CAN_FAULT"
+		(at 132.08 54.61 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "3f0ecfba-2e52-48e8-95bb-74995c6d4c67")
 	)
 	(label "SPI_MISO"
 		(at 133.35 77.47 0)
@@ -3297,16 +3323,6 @@
 		)
 		(uuid "7c77ba21-7d7c-4fe4-ae72-b53c235f23ec")
 	)
-	(label "TC_I2C_SCL"
-		(at 130.81 82.55 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "919b2e9f-2d49-4a81-8654-b9f797f0c6c0")
-	)
 	(label "OSC_IN"
 		(at 134.62 116.84 0)
 		(effects
@@ -3367,6 +3383,16 @@
 		)
 		(uuid "c03db0ab-1f8c-4081-aada-1c9936c8f9fd")
 	)
+	(label "CAN_RX"
+		(at 132.08 57.15 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "c3048e82-b6db-4a49-b129-53f6331ab894")
+	)
 	(label "SPI_MOSI"
 		(at 133.35 80.01 0)
 		(effects
@@ -3386,16 +3412,6 @@
 			(justify left bottom)
 		)
 		(uuid "e7f025bf-1615-4db4-abe0-7ce13ccc0bb3")
-	)
-	(label "TC_I2C_SDA"
-		(at 130.81 85.09 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "e906f616-d782-4b99-b7c8-494ea3668a3c")
 	)
 	(label "PAN_STEP"
 		(at 132.08 49.53 0)
@@ -3437,17 +3453,6 @@
 			(justify right)
 		)
 		(uuid "0142a9c6-ba8c-4cc2-8634-30c302b6c61f")
-	)
-	(hierarchical_label "TC_I2C_SDA"
-		(shape bidirectional)
-		(at 128.27 85.09 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "051724dc-329d-401c-82d4-ded0d5823d75")
 	)
 	(hierarchical_label "PAN_STEP"
 		(shape output)
@@ -3592,6 +3597,17 @@
 		)
 		(uuid "5fbbdbb5-4400-4f8f-abeb-c6a47b36dddc")
 	)
+	(hierarchical_label "CAN_FAULT"
+		(shape input)
+		(at 129.54 54.61 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "62066fac-c6f4-44ae-9f89-2f84de082d1a")
+	)
 	(hierarchical_label "GND"
 		(shape passive)
 		(at 208.28 95.25 270)
@@ -3647,16 +3663,16 @@
 		)
 		(uuid "95952f47-644e-498b-8941-bdc011f166f5")
 	)
-	(hierarchical_label "TC_I2C_SCL"
-		(shape bidirectional)
-		(at 128.27 82.55 180)
+	(hierarchical_label "CAN_TX"
+		(shape output)
+		(at 129.54 59.69 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify right)
 		)
-		(uuid "96332ea1-df8a-47d0-a8d5-f38d47796753")
+		(uuid "96b76943-495c-46ba-87cc-65c2e382857c")
 	)
 	(hierarchical_label "GND"
 		(shape passive)
@@ -3701,6 +3717,17 @@
 			(justify right)
 		)
 		(uuid "b6700bfa-e88f-4c21-b809-38fa5032131b")
+	)
+	(hierarchical_label "CAN_RX"
+		(shape output)
+		(at 129.54 57.15 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "bc8c0c42-d841-4ed5-b189-9298ba45e956")
 	)
 	(hierarchical_label "GND"
 		(shape passive)
