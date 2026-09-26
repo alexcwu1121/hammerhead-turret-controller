@@ -22,6 +22,8 @@ target_sources(${CMAKE_PROJECT_NAME}
     PRIVATE
         startup_stm32f302xc.s
         main.cpp
+        bsp.cpp
+        bmi270.cpp
 )
 target_link_libraries(${CMAKE_PROJECT_NAME}
     PRIVATE

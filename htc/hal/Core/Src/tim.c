@@ -26,6 +26,8 @@
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim6;
 
 /* TIM2 init function */
 void MX_TIM2_Init(void)
@@ -209,6 +211,41 @@ void HAL_TIM_Encoder_MspDeInit(TIM_HandleTypeDef* tim_encoderHandle)
 
   /* USER CODE END TIM3_MspDeInit 1 */
   }
+}
+
+void MX_TIM4_Init(void)
+{
+    __HAL_RCC_TIM4_CLK_ENABLE();
+
+    htim4.Instance = TIM4;
+    htim4.Init.Prescaler = 72 - 1;
+    htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+    //htim4.Init.Period = 1000 - 1;
+    htim4.Init.Period = 30;
+    htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+
+    if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+    {
+        Error_Handler();
+    }
+}
+
+void MX_TIM6_Init(void)
+{
+    __HAL_RCC_TIM6_CLK_ENABLE();
+
+    htim6.Instance = TIM6;
+    htim6.Init.Prescaler = 72 - 1;
+    htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim6.Init.Period = 1000 - 1;
+    htim6.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+
+    if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+    {
+        Error_Handler();
+    }
 }
 
 /* USER CODE BEGIN 1 */
