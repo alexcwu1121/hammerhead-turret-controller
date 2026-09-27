@@ -18,5 +18,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     binutils-multiarch \
     clang-format \
     clang-tidy \
+    openssh-server \
     && pip3 install --no-cache-dir pre-commit \
     && rm -rf /var/lib/apt/lists/*
