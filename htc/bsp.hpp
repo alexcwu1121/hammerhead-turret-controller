@@ -6,9 +6,9 @@
 namespace bsp
 {
 /// @brief Number of ticks per second
-constexpr std::uint32_t TICKS_PER_SEC{1000U};
+constexpr std::uint32_t TICKS_PER_SEC {1000U};
 
-/// @brief Set pan stepping 
+/// @brief Set pan stepping
 
 /// @brief Set tilt stepping period
 
