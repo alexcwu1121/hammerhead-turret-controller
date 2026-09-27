@@ -2,9 +2,6 @@
 #define BMI270_HPP_
 
 #include "bsp.hpp"
-#include "gpio.h"
-#include "main.h"
-#include "spi.h"
 
 namespace imu
 {
@@ -272,7 +269,7 @@ private:
     /// @param reg register to write to
     /// @param numRegisters number of registers to write
     /// @return Fault
-    [[nodiscard]] Fault WriteRegisters(const uint8_t* buf, Register reg, uint16_t numRegisters);
+    [[nodiscard]] Fault WriteRegisters(uint8_t* buf, Register reg, uint16_t numRegisters);
 
     /// @brief Read N registers
     /// @param buf output buffer

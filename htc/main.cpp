@@ -1,23 +1,6 @@
-#include "main.h"
-
 #include "bsp.hpp"
-#include "gpio.h"
-#include "i2c.h"
-#include "spi.h"
-#include "stm32f3xx_it.h"
-#include "tim.h"
-#include "usart.h"
-
-// electrical todo
-// adjust vref of stepper drivers either with DAC or potentiometer
-// add mounting support holes near power connector
-// somehow add bigger uart debug pads
-// Consider allowing PWMing of motor step pin
-// Add testpoints
-// Add 2 fan controllers
-// Add temperature sensor
-
-#include "bmi270.hpp"
+#include "cli_ao.hpp"
+#include "imu_ao.hpp"
 
 int main(void)
 {
@@ -33,10 +16,37 @@ int main(void)
     MX_SPI3_Init();
     MX_TIM2_Init();
     MX_TIM3_Init();
-    MX_TIM4_Init();
-    MX_TIM6_Init();
+    MX_CAN_Init();
+    MX_TIM1_Init();
+    MX_TIM17_Init();
     MX_USART2_UART_Init();
 
+    // Init event pools
+    static QF_MPOOL_EL(QP::QEvt) smlPoolSto[50];  // small (bare signals)
+    QP::QF::poolInit(smlPoolSto, sizeof(smlPoolSto), sizeof(smlPoolSto[0]));
+    static uint8_t mdPoolSto[50][32];  // medium (average data packets)
+    QP::QF::poolInit(mdPoolSto, sizeof(mdPoolSto), sizeof(mdPoolSto[0]));
+    static uint8_t lgPoolSto[7][512];  // large (logs or text)
+    QP::QF::poolInit(lgPoolSto, sizeof(lgPoolSto), sizeof(lgPoolSto[0]));
+
+    // Init publish-subscribe signals
+    static QP::QSubscrList subscrSto[bsp::PublicSignals::MAX_PUB_SIG];
+    QP::QActive::psInit(subscrSto, Q_DIM(subscrSto));
+
+    // Init QF scheduler
+    QP::QF::init();
+
+    // Start AOs
+    // ParamAO is highest priority because it doesn't do much + must start before everything else
+    cli::CLIAO::Inst().Start(2U, bsp::SubsystemID::CLI_SUBSYSTEM);
+    imu::IMUAO::Inst().Start(6U, bsp::SubsystemID::IMU_SUBSYSTEM);
+
+    // Start QF scheduler
+    return QP::QF::run();
+
+    return 0;
+
+    /*
     HAL_GPIO_WritePin(PAN_RESET_GPIO_Port, PAN_RESET_Pin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(PAN_DIR_GPIO_Port, PAN_DIR_Pin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(PAN_MS1_GPIO_Port, PAN_MS1_Pin, GPIO_PIN_RESET);
@@ -49,15 +59,15 @@ int main(void)
     HAL_GPIO_WritePin(TILT_MS2_GPIO_Port, TILT_MS2_Pin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(TILT_MS3_GPIO_Port, TILT_MS3_Pin, GPIO_PIN_RESET);
 
-    HAL_NVIC_SetPriority(TIM4_IRQn, 3, 0);
-    HAL_NVIC_EnableIRQ(TIM4_IRQn);
+    //HAL_NVIC_SetPriority(TIM4_IRQn, 3, 0);
+    //HAL_NVIC_EnableIRQ(TIM4_IRQn);
     // HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 3, 0);
     // HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
 
-    HAL_TIM_Base_Start_IT(&htim4);
+    //HAL_TIM_Base_Start_IT(&htim4);
     // HAL_TIM_Base_Start_IT(&htim6);
 
-    __HAL_TIM_SET_AUTORELOAD(&htim4, 100);
+    //__HAL_TIM_SET_AUTORELOAD(&htim4, 100);
 
     HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
     HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
@@ -97,4 +107,5 @@ int main(void)
         // HAL_GPIO_WritePin(PAN_STEP_GPIO_Port, PAN_STEP_Pin, GPIO_PIN_SET);
         // HAL_GPIO_WritePin(TILT_STEP_GPIO_Port, TILT_STEP_Pin, GPIO_PIN_SET);
     }
+    */
 }

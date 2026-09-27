@@ -17,13 +17,20 @@ add_executable(${CMAKE_PROJECT_NAME})
 target_include_directories(${CMAKE_PROJECT_NAME}
     PRIVATE
         ./
+        cli/
+        imu/
 )
 target_sources(${CMAKE_PROJECT_NAME}
     PRIVATE
         startup_stm32f302xc.s
-        main.cpp
         bsp.cpp
-        bmi270.cpp
+        main.cpp
+        cli/cli_ao.cpp
+        cli/cli_binding.cpp
+        cli/thirdparty/embedded_cli.c
+        cli/thirdparty/printf.c
+        imu/bmi270.cpp
+        imu/imu_ao.cpp
 )
 target_link_libraries(${CMAKE_PROJECT_NAME}
     PRIVATE

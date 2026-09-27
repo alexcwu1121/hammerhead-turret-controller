@@ -1,5 +1,7 @@
 #include "bmi270.hpp"
 
+#include "cli_ao.hpp"
+
 namespace imu
 {
 /// @brief BMI270 device ID
@@ -82,7 +84,7 @@ enum InternalStatus : uint8_t
 };
 
 /// @brief Minimal BMI270 config file
-constexpr uint8_t bmi270_maximum_fifo_config_file[] = {
+uint8_t bmi270_maximum_fifo_config_file[] = {
     0xc8, 0x2e, 0x00, 0x2e, 0x80, 0x2e, 0x1a, 0x00, 0xc8, 0x2e, 0x00, 0x2e, 0xc8, 0x2e, 0x00, 0x2e, 0xc8, 0x2e, 0x00,
     0x2e, 0xc8, 0x2e, 0x00, 0x2e, 0xc8, 0x2e, 0x00, 0x2e, 0xc8, 0x2e, 0x00, 0x2e, 0x90, 0x32, 0x21, 0x2e, 0x59, 0xf5,
     0x10, 0x30, 0x21, 0x2e, 0x6a, 0xf5, 0x1a, 0x24, 0x22, 0x00, 0x80, 0x2e, 0x3b, 0x00, 0xc8, 0x2e, 0x44, 0x47, 0x22,
@@ -182,7 +184,7 @@ Fault BMI270::Initialize()
     else { return Fault::INVALID_ID; }
 
     // Disable advanced power save mode
-    static const uint8_t pwr_conf = PWR_CONF_REG(AdvPowerSave::APS_OFF, FIFOSelfWakeUp::FSW_OFF, FupEn::FUP_OFF);
+    static uint8_t pwr_conf = PWR_CONF_REG(AdvPowerSave::APS_OFF, FIFOSelfWakeUp::FSW_OFF, FupEn::FUP_OFF);
     fault = WriteRegisters(&pwr_conf, Register::PWR_CONF, sizeof(pwr_conf));
     if (fault != Fault::NO_FAULT) { return fault; }
 
@@ -190,7 +192,7 @@ Fault BMI270::Initialize()
     HAL_Delay(1U);
 
     // Prepare config load
-    static const uint8_t start_init_ctrl = InitCtrl::INIT_ACTIVE;
+    static uint8_t start_init_ctrl = InitCtrl::INIT_ACTIVE;
     fault = WriteRegisters(&start_init_ctrl, Register::INIT_CTRL, sizeof(start_init_ctrl));
     if (fault != Fault::NO_FAULT) { return fault; }
 
@@ -200,7 +202,7 @@ Fault BMI270::Initialize()
     if (fault != Fault::NO_FAULT) { return fault; }
 
     // Complete config load
-    static const uint8_t stop_init_ctrl = InitCtrl::INIT_INACTIVE;
+    static uint8_t stop_init_ctrl = InitCtrl::INIT_INACTIVE;
     fault = WriteRegisters(&stop_init_ctrl, Register::INIT_CTRL, sizeof(stop_init_ctrl));
     if (fault != Fault::NO_FAULT) { return fault; }
 
@@ -222,7 +224,7 @@ Fault BMI270::Initialize()
     }
 
     // Enable gyro and accelerometer
-    static const uint8_t pwr_ctrl = PWR_CTRL_REG(AuxEn::AUX_OFF, GyrEn::GYR_ON, AccEn::ACC_ON, TempEn::TEMP_OFF);
+    static uint8_t pwr_ctrl = PWR_CTRL_REG(AuxEn::AUX_OFF, GyrEn::GYR_ON, AccEn::ACC_ON, TempEn::TEMP_OFF);
     fault = WriteRegisters(&pwr_ctrl, Register::PWR_CTRL, sizeof(pwr_ctrl));
 
     // Set default accelerometer ODR
@@ -301,7 +303,7 @@ Fault BMI270::RunCompensation()
     /// TODO: Refactor into an asynchronous state machine
 
     // Disable ADS
-    static const uint8_t pwr_conf = PWR_CONF_REG(AdvPowerSave::APS_OFF, FIFOSelfWakeUp::FSW_OFF, FupEn::FUP_OFF);
+    static uint8_t pwr_conf = PWR_CONF_REG(AdvPowerSave::APS_OFF, FIFOSelfWakeUp::FSW_OFF, FupEn::FUP_OFF);
     Fault fault = WriteRegisters(&pwr_conf, Register::PWR_CONF, sizeof(pwr_conf));
     if (fault != Fault::NO_FAULT) { return fault; }
 
@@ -420,11 +422,11 @@ Fault BMI270::RunCompensation()
     HAL_Delay(40U);
 
     // Unlock NVM programming
-    static const uint8_t nvm_unlock = 0x01;
+    static uint8_t nvm_unlock = 0x01;
     fault = WriteRegisters(&nvm_unlock, Register::NV_CONF, sizeof(nvm_unlock));
 
     // Program NVM
-    static const uint8_t nvm_prog = 0xa0;
+    static uint8_t nvm_prog = 0xa0;
     fault = WriteRegisters(&nvm_prog, Register::CMD, sizeof(nvm_prog));
     if (fault != Fault::NO_FAULT) { return fault; }
 
@@ -438,13 +440,13 @@ Fault BMI270::RunCompensation()
     }
 
     // Lock NVM programming
-    static const uint8_t nvm_lock = 0x00;
+    static uint8_t nvm_lock = 0x00;
     fault = WriteRegisters(&nvm_lock, Register::NV_CONF, sizeof(nvm_lock));
 
     return fault;
 }
 
-Fault BMI270::WriteRegisters(const uint8_t* buf, Register reg, uint16_t numRegisters)
+Fault BMI270::WriteRegisters(uint8_t* buf, Register reg, uint16_t numRegisters)
 {
     // Fail write operation if device ID not verified
     if (!_verified) { return Fault::INVALID_ID; }
@@ -457,7 +459,7 @@ Fault BMI270::WriteRegisters(const uint8_t* buf, Register reg, uint16_t numRegis
     // Transmit command byte
     auto rc = HAL_SPI_Transmit(_spiDevice, &command, 1U, _timeout);
     // Write registers
-    if (rc == HAL_StatusTypeDef::HAL_OK) { rc = HAL_SPI_Transmit(_spiDevice, (uint8_t*)buf, numRegisters, _timeout); }
+    if (rc == HAL_StatusTypeDef::HAL_OK) { rc = HAL_SPI_Transmit(_spiDevice, buf, numRegisters, _timeout); }
     HAL_GPIO_WritePin(_csPort, _csPinNum, GPIO_PIN_SET);
 
     return static_cast<Fault>(rc);
