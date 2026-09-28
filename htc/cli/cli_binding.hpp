@@ -17,6 +17,12 @@ void onClear(EmbeddedCli* cli, char* args, void* context);
 /// @param context
 void onIMU(EmbeddedCli* cli, char* args, void* context);
 
+/// @brief Turret cli binding
+/// @param cli
+/// @param args
+/// @param context
+void onTurret(EmbeddedCli* cli, char* args, void* context);
+
 /// @brief Initialize bindings for a CLI
 /// @param cli ptr to CLI instance
 void InitBindings(EmbeddedCli* cli);

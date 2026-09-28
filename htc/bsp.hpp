@@ -17,15 +17,14 @@ namespace bsp
 {
 /// @brief Number of ticks per second
 constexpr std::uint32_t TICKS_PER_SEC {1000U};
+/// @brief APB2 block frequency
+constexpr std::uint32_t APB2_CLOCK_FREQUENCY {48000000U};
 
 /// @brief Subsystem IDs
 enum SubsystemID : uint8_t
 {
-    PARAMETER_SUBSYSTEM = 0U,
-    MC1_SUBSYSTEM,
-    MC2_SUBSYSTEM,
-    CLI_SUBSYSTEM,
-    MISSION_SUBSYSTEM,
+    CLI_SUBSYSTEM = 0U,
+    TURRET_SUBSYSTEM,
     IMU_SUBSYSTEM,
     NUM_SUBSYSTEMS  // Keep this last
 };
@@ -33,9 +32,7 @@ enum SubsystemID : uint8_t
 /// @brief Public QP signals
 enum PublicSignals : QP::QSignal
 {
-    PARAMETER_UPDATE_SIG = QP::Q_USER_SIG,
-    ADC_SIG,
-    IMU_SIG,
+    IMU_SIG = QP::Q_USER_SIG,
     FAULT_SIG,
     REQUEST_FAULT_SIG,
     MAX_PUB_SIG  // Keep this last

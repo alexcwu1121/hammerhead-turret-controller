@@ -19,6 +19,7 @@ target_include_directories(${CMAKE_PROJECT_NAME}
         ./
         cli/
         imu/
+        turret/
 )
 target_sources(${CMAKE_PROJECT_NAME}
     PRIVATE
@@ -31,6 +32,8 @@ target_sources(${CMAKE_PROJECT_NAME}
         cli/thirdparty/printf.c
         imu/bmi270.cpp
         imu/imu_ao.cpp
+        turret/a4988.cpp
+        turret/turret_ao.cpp
 )
 target_link_libraries(${CMAKE_PROJECT_NAME}
     PRIVATE
