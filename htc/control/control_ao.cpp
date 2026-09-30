@@ -29,7 +29,13 @@ static constexpr uint16_t SubCANIDIdx = 0x400;
 /// @brief Subscribed CAN message IDs
 enum SubCANID : uint16_t
 {
-    SUB_WRITE_IMU_RESET = SubCANIDIdx,
+    SUB_HOME_PAN = SubCANIDIdx,
+    SUB_HOME_TILT,
+    SUB_SET_RATE_PAN,
+    SUB_SET_RATE_TILT,
+    SUB_SET_POS_PAN,
+    SUB_SET_POS_TILT,
+    SUB_WRITE_IMU_RESET,
     SUB_WRITE_IMU_COMP,
     MAX_SUB_ID
 };
@@ -50,6 +56,26 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
             // Inject events
             switch (header.StdId)
             {
+                case SubCANID::SUB_SET_RATE_PAN:
+                {
+                    if (header.DLC == 4)
+                    {
+                        float rate = 0.0f;
+                        memcpy(&rate, data, sizeof(float));
+                        turret::TurretAO::Inst().SetRateSetpoint(turret::StepperID::PAN, rate);
+                    }
+                    break;
+                }
+                case SubCANID::SUB_SET_RATE_TILT:
+                {
+                    if (header.DLC == 4)
+                    {
+                        float rate = 0.0f;
+                        memcpy(&rate, data, sizeof(float));
+                        turret::TurretAO::Inst().SetRateSetpoint(turret::StepperID::TILT, rate);
+                    }
+                    break;
+                }
                 case SubCANID::SUB_WRITE_IMU_RESET:
                 {
                     imu::IMUAO::Inst().Reset();
