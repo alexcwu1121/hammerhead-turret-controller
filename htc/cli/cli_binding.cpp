@@ -3,6 +3,7 @@
 #include <cstring>
 
 #include "cli_ao.hpp"
+#include "control_ao.hpp"
 #include "imu_ao.hpp"
 #include "thirdparty/embedded_cli.h"
 #include "turret_ao.hpp"
@@ -73,38 +74,64 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
     {
         case 1U:
         {
+            const char* cmd_str = embeddedCliGetToken(args, 1U);
+
+            if (strcmp(cmd_str, "startencstream") == 0)
+            {
+                turret::TurretAO::Inst().StartEncoderStream();
+                handled = true;
+            }
+            else if (strcmp(cmd_str, "stopencstream") == 0)
+            {
+                turret::TurretAO::Inst().StopEncoderStream();
+                handled = true;
+            }
             break;
         }
         case 2U:
         {
             const char* cmd_str = embeddedCliGetToken(args, 1U);
-            const char* motor_str = embeddedCliGetToken(args, 2U);
+            const char* opt_str = embeddedCliGetToken(args, 2U);
 
             if (strcmp(cmd_str, "disable") == 0)
             {
-                if (strcmp(motor_str, "pan") == 0 || strcmp(motor_str, "all") == 0)
+                if (strcmp(opt_str, "pan") == 0 || strcmp(opt_str, "all") == 0)
                 {
-                    turret::TurretAO::Inst().DisablePan();
+                    turret::TurretAO::Inst().Disable(turret::StepperID::PAN);
                     handled = true;
                 }
 
-                if (strcmp(motor_str, "tilt") == 0 || strcmp(motor_str, "all") == 0)
+                if (strcmp(opt_str, "tilt") == 0 || strcmp(opt_str, "all") == 0)
                 {
-                    turret::TurretAO::Inst().DisableTilt();
+                    turret::TurretAO::Inst().Disable(turret::StepperID::TILT);
                     handled = true;
                 }
             }
             else if (strcmp(cmd_str, "enable") == 0)
             {
-                if (strcmp(motor_str, "pan") == 0 || strcmp(motor_str, "all") == 0)
+                if (strcmp(opt_str, "pan") == 0 || strcmp(opt_str, "all") == 0)
                 {
-                    turret::TurretAO::Inst().EnablePan();
+                    turret::TurretAO::Inst().Enable(turret::StepperID::PAN);
                     handled = true;
                 }
 
-                if (strcmp(motor_str, "tilt") == 0 || strcmp(motor_str, "all") == 0)
+                if (strcmp(opt_str, "tilt") == 0 || strcmp(opt_str, "all") == 0)
                 {
-                    turret::TurretAO::Inst().EnableTilt();
+                    turret::TurretAO::Inst().Enable(turret::StepperID::TILT);
+                    handled = true;
+                }
+            }
+            else if (strcmp(cmd_str, "setmode") == 0)
+            {
+                if (strcmp(opt_str, "ol") == 0)
+                {
+                    turret::TurretAO::Inst().SetMode(turret::Mode::OPEN_LOOP);
+                    handled = true;
+                }
+
+                if (strcmp(opt_str, "cl") == 0)
+                {
+                    turret::TurretAO::Inst().SetMode(turret::Mode::CLOSED_LOOP);
                     handled = true;
                 }
             }
@@ -121,13 +148,31 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
 
                 if (strcmp(motor_str, "pan") == 0 || strcmp(motor_str, "all") == 0)
                 {
-                    turret::TurretAO::Inst().SetPanRateSetpointDirect(rate);
+                    turret::TurretAO::Inst().SetRateSetpointDirect(turret::StepperID::PAN, rate);
                     handled = true;
                 }
 
                 if (strcmp(motor_str, "tilt") == 0 || strcmp(motor_str, "all") == 0)
                 {
-                    turret::TurretAO::Inst().SetTiltRateSetpointDirect(rate);
+                    turret::TurretAO::Inst().SetRateSetpointDirect(turret::StepperID::TILT, rate);
+                    handled = true;
+                }
+            }
+            else if (strcmp(cmd_str, "setrate") == 0)
+            {
+                const char* motor_str = embeddedCliGetToken(args, 2U);
+                const char* rate_str = embeddedCliGetToken(args, 3U);
+                float rate = strtofS(rate_str);
+
+                if (strcmp(motor_str, "pan") == 0 || strcmp(motor_str, "all") == 0)
+                {
+                    turret::TurretAO::Inst().SetRateSetpoint(turret::StepperID::PAN, rate);
+                    handled = true;
+                }
+
+                if (strcmp(motor_str, "tilt") == 0 || strcmp(motor_str, "all") == 0)
+                {
+                    turret::TurretAO::Inst().SetRateSetpoint(turret::StepperID::TILT, rate);
                     handled = true;
                 }
             }
@@ -144,9 +189,46 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
         // Help dialogue
         cli::CLIAO::Inst().Printf(
             "Usage:\n\r"
+            "\tturret startencstream\n\r"
+            "\tturret stopencstream\n\r"
+            "\tturret setmode [Stepper (ol|cl)]\n\r"
             "\tturret setratedirect [Stepper (all|pan|tilt)] [rate (rad/s)]\n\r"
+            "\tturret setrate [Stepper (all|pan|tilt)] [rate (rad/s)]\n\r"
             "\tturret disable [Stepper (all|pan|tilt)]\n\r"
             "\tturret enable [Stepper (all|pan|tilt)]\n\r");
+    }
+}
+
+void cli::onControl(EmbeddedCli* cli, char* args, void* context)
+{
+    // Get number of arguments
+    uint16_t argc = embeddedCliGetTokenCount(args);
+    bool handled = false;
+
+    switch (argc)
+    {
+        case 1U:
+        {
+            const char* cmd_str = embeddedCliGetToken(args, 1U);
+            if (strcmp(cmd_str, "print_fault") == 0)
+            {
+                control::ControlAO::Inst().PrintFault();
+                handled = true;
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+
+    if (!handled)
+    {
+        // Help dialogue
+        cli::CLIAO::Inst().Printf(
+            "Usage:\n\r"
+            "\tcontrol print_fault\n\r");
     }
 }
 
@@ -166,4 +248,9 @@ void cli::InitBindings(EmbeddedCli* cli)
     CliCommandBinding turret_binding = {
         .name = "turret", .help = "Manage turret", .tokenizeArgs = true, .context = NULL, .binding = onTurret};
     embeddedCliAddBinding(cli, turret_binding);
+
+    // Command binding for the control system command
+    CliCommandBinding control_binding = {
+        .name = "control", .help = "Manage control", .tokenizeArgs = true, .context = NULL, .binding = onControl};
+    embeddedCliAddBinding(cli, control_binding);
 }

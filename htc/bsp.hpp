@@ -26,6 +26,7 @@ enum SubsystemID : uint8_t
     CLI_SUBSYSTEM = 0U,
     TURRET_SUBSYSTEM,
     IMU_SUBSYSTEM,
+    CONTROL_SUBSYSTEM,
     NUM_SUBSYSTEMS  // Keep this last
 };
 

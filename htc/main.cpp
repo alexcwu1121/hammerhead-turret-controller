@@ -1,5 +1,6 @@
 #include "bsp.hpp"
 #include "cli_ao.hpp"
+#include "control_ao.hpp"
 #include "imu_ao.hpp"
 #include "turret_ao.hpp"
 
@@ -41,6 +42,7 @@ int main(void)
     cli::CLIAO::Inst().Start(1U, bsp::SubsystemID::CLI_SUBSYSTEM);
     imu::IMUAO::Inst().Start(2U, bsp::SubsystemID::IMU_SUBSYSTEM);
     turret::TurretAO::Inst().Start(3U, bsp::SubsystemID::TURRET_SUBSYSTEM);
+    control::ControlAO::Inst().Start(4U, bsp::SubsystemID::CONTROL_SUBSYSTEM);
 
     // Start QF scheduler
     return QP::QF::run();

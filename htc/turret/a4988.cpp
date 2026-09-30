@@ -2,7 +2,7 @@
 
 namespace a4988
 {
-const Fault A4988::Init()
+Fault A4988::Init() const
 {
     // Enable motor controller
     auto fault = Enable();
@@ -27,7 +27,7 @@ const Fault A4988::Init()
     return fault;
 }
 
-const Fault A4988::SetDir(StepDir dir)
+Fault A4988::SetDir(StepDir dir) const
 {
     auto fault = Fault::NO_FAULT;
     switch (dir)
@@ -51,7 +51,7 @@ const Fault A4988::SetDir(StepDir dir)
     return fault;
 }
 
-const Fault A4988::SetResolution(StepResolution res)
+Fault A4988::SetResolution(StepResolution res) const
 {
     auto fault = Fault::NO_FAULT;
     switch (res)
@@ -100,22 +100,21 @@ const Fault A4988::SetResolution(StepResolution res)
     return fault;
 }
 
-const Fault A4988::SetFrequency(float freq)
+Fault A4988::SetFrequency(float freq) const
 {
     if (freq < 0) { return Fault::INVALID_FREQ; }
     else if (freq == 0)
     {
         // 0 is actually valid. We'll just disable pwm generation
-        auto fault = Fault::NO_FAULT;
-        if (HAL_TIM_PWM_Stop(&_periph.htim, _periph.htimCh) != HAL_OK) { fault = Fault::HAL_FAULT; }
-        return fault;
+        HAL_TIM_PWM_Stop(&_periph.htim, _periph.htimCh);
+        return Fault::NO_FAULT;
     }
 
     // Enable PWM generation if it wasn't already
-    if (HAL_TIM_PWM_Start(&_periph.htim, _periph.htimCh) != HAL_OK) { return Fault::HAL_FAULT; }
+    (void)HAL_TIM_PWM_Start(&_periph.htim, _periph.htimCh);
 
     // Compute reload register max value from frequency
-    uint32_t arr = _periph.pwmClockFrequency / (freq * (_periph.htim.Instance->PSC));
+    uint32_t arr = _periph.pwmClockFrequency / (freq * _periph.htim.Instance->PSC);
 
     /// TODO: we can actually adjust the prescaler dynamically here instead of erroring
     if (arr > UINT16_MAX) { return Fault::FREQ_TOO_HIGH; }
@@ -129,13 +128,13 @@ const Fault A4988::SetFrequency(float freq)
     return Fault::NO_FAULT;
 }
 
-const Fault A4988::Enable()
+Fault A4988::Enable() const
 {
     HAL_GPIO_WritePin(&_periph.resetPinPort, _periph.resetPinNum, GPIO_PIN_SET);
     return Fault::NO_FAULT;
 }
 
-const Fault A4988::Disable()
+Fault A4988::Disable() const
 {
     HAL_GPIO_WritePin(&_periph.resetPinPort, _periph.resetPinNum, GPIO_PIN_RESET);
     return Fault::NO_FAULT;

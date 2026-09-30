@@ -94,37 +94,37 @@ public:
 
     /// @brief Initialize a4988
     /// @return a4988::Fault
-    const Fault Init();
+    [[nodiscard]] Fault Init() const;
 
     /// @brief Set step direction
     /// @param dir
     /// @return a4988::Fault
-    const Fault SetDir(StepDir dir);
+    [[nodiscard]] Fault SetDir(StepDir dir) const;
 
     /// @brief Set step resolution
     /// @param res
     /// @return a4988::Fault
-    const Fault SetResolution(StepResolution res);
+    [[nodiscard]] Fault SetResolution(StepResolution res) const;
 
     /// @brief Set step frequency
     /// @param freq
     /// @return a4988::Fault
-    const Fault SetFrequency(float freq);
+    [[nodiscard]] Fault SetFrequency(float freq) const;
 
     /// NOTE: Sleep and enable pins unused in this application
     /// NOTE: Enable and Disable below are slight misnomers. They control RESET to disable motor output stage only
 
     /// @brief Enable motor driver
     /// @return a4988::Fault
-    const Fault Enable();
+    [[nodiscard]] Fault Enable() const;
 
     /// @brief Disable motor driver
     /// @return a4988::Fault
-    const Fault Disable();
+    [[nodiscard]] Fault Disable() const;
 
 private:
     /// @brief Minimum step frequency before round down to zero (Hz)
-    static constexpr uint32_t _minimumStepFrequency {1u};
+    static constexpr uint32_t _minimumStepFrequency {10u};
 
     /// @brief A4988 peripheral assignments
     A4988Peripherals _periph;

@@ -49,7 +49,7 @@ void MX_TIM1_Init(void)
     htim1.Init.Period = 65535;
     htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim1.Init.RepetitionCounter = 0;
-    htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     if (HAL_TIM_PWM_Init(&htim1) != HAL_OK) { Error_Handler(); }
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
@@ -99,7 +99,7 @@ void MX_TIM2_Init(void)
     htim2.Init.Period = 4294967295;
     htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+    sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
     sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
     sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
     sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
@@ -135,7 +135,7 @@ void MX_TIM3_Init(void)
     htim3.Init.Period = 65535;
     htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+    sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
     sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
     sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
     sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
@@ -171,7 +171,7 @@ void MX_TIM17_Init(void)
     htim17.Init.Period = 65535;
     htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim17.Init.RepetitionCounter = 0;
-    htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     if (HAL_TIM_Base_Init(&htim17) != HAL_OK) { Error_Handler(); }
     if (HAL_TIM_PWM_Init(&htim17) != HAL_OK) { Error_Handler(); }
     sConfigOC.OCMode = TIM_OCMODE_PWM1;

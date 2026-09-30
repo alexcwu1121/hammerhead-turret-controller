@@ -11,6 +11,18 @@ extern "C" void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
     cli::CLIAO::Inst().ReceiveChar(huart);
 }
 
+extern "C" void HAL_UART_ErrorCallback(UART_HandleTypeDef* huart)
+{
+    if (huart->Instance == USART2)
+    {
+        // clear overrun fault if set
+        if (__HAL_UART_GET_FLAG(huart, UART_FLAG_ORE)) { __HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF); }
+
+        // restart listening
+        cli::CLIAO::Inst().ReceiveChar(huart);
+    }
+}
+
 cli::CLIAO::CLIAO() : QP::QActive(&initial), _processTimer(this, PrivateSignals::PROCESS_SIG, 0U) {}
 
 void cli::CLIAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
@@ -116,13 +128,6 @@ Q_STATE_DEF(cli::CLIAO, initializing)
             // Create new CLI instance
             _cli = embeddedCliNew(config);
 
-            // Register character write function
-            auto write_char_to_cli = [](EmbeddedCli* embeddedCli, char c) {
-                uint8_t char_to_send = c;
-                HAL_UART_Transmit(_uartCliPeriph, &char_to_send, 1, 100);
-            };
-            _cli->writeChar = write_char_to_cli;
-
             // CLI init failed - most likely not enough memory
             if (_cli == NULL)
             {
@@ -135,6 +140,13 @@ Q_STATE_DEF(cli::CLIAO, initializing)
                 static QP::QEvt evt(PrivateSignals::INITIALIZED_SIG);
                 POST(&evt, this);
             }
+
+            // Register character write function
+            auto write_char_to_cli = [](EmbeddedCli* embeddedCli, char c) {
+                uint8_t char_to_send = c;
+                HAL_UART_Transmit(_uartCliPeriph, &char_to_send, 1, 100);
+            };
+            _cli->writeChar = write_char_to_cli;
 
             status_ = Q_RET_HANDLED;
             break;

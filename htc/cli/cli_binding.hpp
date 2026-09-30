@@ -23,6 +23,12 @@ void onIMU(EmbeddedCli* cli, char* args, void* context);
 /// @param context
 void onTurret(EmbeddedCli* cli, char* args, void* context);
 
+/// @brief Control cli binding
+/// @param cli
+/// @param args
+/// @param context
+void onControl(EmbeddedCli* cli, char* args, void* context);
+
 /// @brief Initialize bindings for a CLI
 /// @param cli ptr to CLI instance
 void InitBindings(EmbeddedCli* cli);
