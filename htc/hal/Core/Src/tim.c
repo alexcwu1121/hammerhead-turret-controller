@@ -231,7 +231,7 @@ void HAL_TIM_Encoder_MspInit(TIM_HandleTypeDef* tim_encoderHandle)
         GPIO_InitStruct.Pin = PAN_ENC_A_Pin | PAN_ENC_B_Pin;
         GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
-        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
         GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -255,7 +255,7 @@ void HAL_TIM_Encoder_MspInit(TIM_HandleTypeDef* tim_encoderHandle)
         GPIO_InitStruct.Pin = TILT_ENC_B_Pin | TILT_ENC_A_Pin;
         GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
-        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
         GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -294,7 +294,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
         GPIO_InitStruct.Pin = PAN_STEP_Pin;
         GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
-        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
         GPIO_InitStruct.Alternate = GPIO_AF6_TIM1;
         HAL_GPIO_Init(PAN_STEP_GPIO_Port, &GPIO_InitStruct);
 
@@ -315,7 +315,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
         GPIO_InitStruct.Pin = TILT_STEP_Pin;
         GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
-        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
         GPIO_InitStruct.Alternate = GPIO_AF1_TIM17;
         HAL_GPIO_Init(TILT_STEP_GPIO_Port, &GPIO_InitStruct);
 

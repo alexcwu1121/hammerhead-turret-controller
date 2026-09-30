@@ -159,11 +159,11 @@ private:
     /// @brief Closed loop stepper control polling timer
     QP::QTimeEvt _clTimer;
     /// @brief Stepper closed loop control timer frequency in Hz
-    static constexpr uint32_t _clTimerFreq = 50U;
+    static constexpr uint32_t _clTimerFreq = 20U;
     /// @brief Stepper closed loop control update interval
     static constexpr uint32_t _clTimerInterval = bsp::TICKS_PER_SEC / _clTimerFreq;
     /// @brief Closed loop stepper slew rate per interval (rad/s)
-    static constexpr float _clSlewRate = 0.75f;
+    static constexpr float _clSlewRate = 1.00f;
 
     /// @brief Maximum angular velocity setpoint. NEMA8 maximum angular velocity ~100 rad/s. Anything above and risk
     /// stalling.
@@ -172,7 +172,7 @@ private:
     /// @brief Encoder CLI streaming timer
     QP::QTimeEvt _encoderStreamTimer;
     /// @brief Encoder CLI streaming timer interval
-    static constexpr uint32_t _encoderStreamTimerInterval = bsp::TICKS_PER_SEC / 1U;
+    static constexpr uint32_t _encoderStreamTimerInterval = bsp::TICKS_PER_SEC / 5U;
 
     /// @brief Pan rate setpoint (rad/s)
     float _panRateSetpoint = 0.0f;
