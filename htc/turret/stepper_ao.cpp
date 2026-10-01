@@ -47,12 +47,12 @@ static a4988::A4988 tiltDriver = a4988::A4988Peripherals {.stepPinPort = *PAN_ST
 
 StepperAO::StepperAO(a4988::A4988& stepperDriver, TIM_HandleTypeDef& htim) :
     QP::QActive(&initial),
+    _stepperDriver(stepperDriver),
+    _encoderTim(htim),
     _faultRecoveryTimer(this, PrivateSignals::RESET_SIG, 0U),
     _encoderPollTimer(this, PrivateSignals::POLL_ENCODER_SIG, 0U),
-    _encoderStreamTimer(this, PrivateSignals::ENCODER_STREAM_SIG, 0U),
     _clTimer(this, PrivateSignals::CL_UPDATE_SIG, 0U),
-    _stepperDriver(stepperDriver),
-    _encoderTim(htim)
+    _encoderStreamTimer(this, PrivateSignals::ENCODER_STREAM_SIG, 0U)
 {}
 
 StepperAO& StepperAO::PanInst()
@@ -121,6 +121,8 @@ Fault StepperAO::SetPWMFromRate(float omega)
 
     fault = _stepperDriver.SetFrequency(freq);
     if (fault != a4988::Fault::NO_FAULT) { return Fault::SET_FREQ_FAILED; }
+
+    return Fault::NO_FAULT;
 }
 
 Q_STATE_DEF(StepperAO, initial)
@@ -146,7 +148,9 @@ Q_STATE_DEF(StepperAO, root)
         }
         case PrivateSignals::DISABLE_SIG:
         {
-            _stepperDriver.Disable();
+            auto fault = _stepperDriver.Disable();
+            if (fault != a4988::Fault::NO_FAULT) { SetFault(_id, Fault::STEPPER_DISABLE_FAILED, true); }
+
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -260,7 +264,9 @@ Q_STATE_DEF(StepperAO, active)
         }
         case PrivateSignals::ENABLE_SIG:
         {
-            _stepperDriver.Enable();
+            auto fault = _stepperDriver.Enable();
+            if (fault != a4988::Fault::NO_FAULT) { SetFault(_id, Fault::STEPPER_ENABLE_FAILED, true); }
+
             status_ = Q_RET_HANDLED;
             break;
         }

@@ -13,6 +13,8 @@ enum Fault : uint8_t
     NO_FAULT = 0U,
     STEPPER_INIT_FAILED,
     ENCODER_INIT_FAILED,
+    STEPPER_ENABLE_FAILED,
+    STEPPER_DISABLE_FAILED,
     SET_DIR_FAILED,
     SET_FREQ_FAILED,
     SET_RES_FAILED,
@@ -37,6 +39,14 @@ constexpr const char* FaultToStr(Fault fault)
         case Fault::ENCODER_INIT_FAILED:
         {
             return "ENCODER_INIT_FAILED";
+        }
+        case Fault::STEPPER_ENABLE_FAILED:
+        {
+            return "STEPPER_ENABLE_FAILED";
+        }
+        case Fault::STEPPER_DISABLE_FAILED:
+        {
+            return "STEPPER_DISABLE_FAILED";
         }
         case Fault::SET_DIR_FAILED:
         {
@@ -125,17 +135,18 @@ private:
     QP::QEvtPtr _queue[_queueSize] = {0};
     /// @brief Flag indicating if AO has executed initial transition
     bool _isStarted = false;
+
+    /// @brief Stepper driver
+    a4988::A4988& _stepperDriver;
+    /// @brief Encoder timer handle
+    TIM_HandleTypeDef& _encoderTim;
+
     /// @brief Internal fault recovery timer
     QP::QTimeEvt _faultRecoveryTimer;
     /// @brief Internal fault recovery timer period in ticks
     uint32_t _faultRecoveryTimerInterval = bsp::TICKS_PER_SEC / 100U;
     /// @brief Fault states
     bool _faultStates[stepper::Fault::NUM_FAULTS] = {false};
-
-    /// @brief Stepper driver
-    a4988::A4988& _stepperDriver;
-    /// @brief Encoder timer handle
-    TIM_HandleTypeDef& _encoderTim;
 
     /// @brief Standard nema 8 steps per revolution
     static constexpr uint16_t _stepsPerRev = 200U;
