@@ -1,11 +1,11 @@
-#ifndef TURRET_AO_HPP_
-#define TURRET_AO_HPP_
+#ifndef STEPPER_AO_HPP_
+#define STEPPER_AO_HPP_
 
 #include "a4988.hpp"
 #include "bsp.hpp"
 #include "qpcpp.hpp"
 
-namespace turret
+namespace stepper
 {
 /// @brief Fault codes
 enum Fault : uint8_t
@@ -57,14 +57,6 @@ constexpr const char* FaultToStr(Fault fault)
     }
 }
 
-/// @brief Stepper IDs
-enum StepperID : uint8_t
-{
-    TILT = 0U,
-    PAN,
-    NUM_STEPPERS
-};
-
 /// @brief Control modes
 enum Mode : uint8_t
 {
@@ -73,26 +65,26 @@ enum Mode : uint8_t
     NUM_MODES
 };
 
-/// @brief Turret AO
-class TurretAO : public QP::QActive
+/// @brief Stepper AO
+class StepperAO : public QP::QActive
 {
 public:
     /// @brief Constructor
-    TurretAO();
-    TurretAO(const TurretAO&) = delete;
-    TurretAO& operator=(const TurretAO&) = delete;
-    TurretAO(TurretAO&&) = delete;
-    TurretAO& operator=(TurretAO&&) = delete;
+    StepperAO(a4988::A4988& stepperDriver, TIM_HandleTypeDef& htim);
+    StepperAO(const StepperAO&) = delete;
+    StepperAO& operator=(const StepperAO&) = delete;
+    StepperAO(StepperAO&&) = delete;
+    StepperAO& operator=(StepperAO&&) = delete;
 
-    /// @brief Get instance
-    /// @return TurretAO&
-    static TurretAO& Inst()
-    {
-        static TurretAO inst;
-        return inst;
-    }
+    /// @brief Get pan stepper instance
+    /// @return StepperAO&
+    static StepperAO& PanInst();
 
-    /// @brief Start TurretAO
+    /// @brief Get tilt stepper instance
+    /// @return StepperAO&
+    static StepperAO& TiltInst();
+
+    /// @brief Start StepperAO
     /// @param priority
     /// @param id
     void Start(const QP::QPrioSpec priority, bsp::SubsystemID id);
@@ -101,19 +93,19 @@ public:
     inline void SetMode(Mode mode);
 
     /// @brief Set a speed setpoint without damping (rad/s)
-    inline void SetRateSetpointDirect(StepperID stepper, float omega);
+    inline void SetRateSetpointDirect(float omega);
 
     /// @brief Set a speed setpoint (rad/s)
-    inline void SetRateSetpoint(StepperID stepper, float omega);
+    inline void SetRateSetpoint(float omega);
 
     /// @brief Start homing sequence
-    inline void Home(StepperID stepper);
+    inline void Home();
 
     /// @brief Enable motor
-    inline void Enable(StepperID stepper);
+    inline void Enable();
 
     /// @brief Disable motor
-    inline void Disable(StepperID stepper);
+    inline void Disable();
 
     /// @brief Start encoder stream
     inline void StartEncoderStream();
@@ -121,7 +113,7 @@ public:
     /// @brief Stop encoder stream
     inline void StopEncoderStream();
 
-    /// @brief Reset turret controller AO
+    /// @brief Reset stepper controller AO
     inline void Reset();
 
 private:
@@ -138,7 +130,12 @@ private:
     /// @brief Internal fault recovery timer period in ticks
     uint32_t _faultRecoveryTimerInterval = bsp::TICKS_PER_SEC / 100U;
     /// @brief Fault states
-    bool _faultStates[turret::Fault::NUM_FAULTS] = {false};
+    bool _faultStates[stepper::Fault::NUM_FAULTS] = {false};
+
+    /// @brief Stepper driver
+    a4988::A4988& _stepperDriver;
+    /// @brief Encoder timer handle
+    TIM_HandleTypeDef& _encoderTim;
 
     /// @brief Standard nema 8 steps per revolution
     static constexpr uint16_t _stepsPerRev = 200U;
@@ -146,15 +143,17 @@ private:
     static constexpr float _gearRatio = 10.0f;
     /// @brief Encoder counts per revolution
     static constexpr uint16_t _encoderCPR = 4000U;
+    /// @brief Encoder counts to shaft angle in radians conversion factor
+    static constexpr float _counts2Rad = 6.28f / (_encoderCPR * _gearRatio);
     /// @brief Rate IIR filter learning rate
     static constexpr float _iirAlpha = 1.0f;
 
     /// @brief Encoder polling timer
-    QP::QTimeEvt _encoderTimer;
+    QP::QTimeEvt _encoderPollTimer;
     /// @brief Encoder polling timer frequency in Hz
-    static constexpr uint32_t _encoderTimerFreq = 50U;
+    static constexpr uint32_t _encoderPollTimerFreq = 50U;
     /// @brief Encoder polling timer interval
-    static constexpr uint32_t _encoderTimerInterval = bsp::TICKS_PER_SEC / _encoderTimerFreq;
+    static constexpr uint32_t _encoderPollTimerInterval = bsp::TICKS_PER_SEC / _encoderPollTimerFreq;
 
     /// @brief Closed loop stepper control polling timer
     QP::QTimeEvt _clTimer;
@@ -174,33 +173,20 @@ private:
     /// @brief Encoder CLI streaming timer interval
     static constexpr uint32_t _encoderStreamTimerInterval = bsp::TICKS_PER_SEC / 5U;
 
-    /// @brief Pan rate setpoint (rad/s)
-    float _panRateSetpoint = 0.0f;
-    /// @brief Tilt rate setpoint (rad/s)
-    float _tiltRateSetpoint = 0.0f;
+    /// @brief Tate setpoint (rad/s)
+    float _rateSetpoint = 0.0f;
 
-    /// @brief Pan closed loop controller command (rad/s)
-    float _panRateCommand = 0.0f;
-    /// @brief Tilt closed loop controller command (rad/s)
-    float _tiltRateCommand = 0.0f;
+    /// @brief Closed loop controller command (rad/s)
+    float _rateCommand = 0.0f;
 
-    /// @brief Last pan encoder value
-    uint16_t _lastPanEnc = 0u;
-    /// @brief Last tilt encoder value
-    uint16_t _lastTiltEnc = 0u;
+    /// @brief Last encoder value
+    uint16_t _lastEnc = 0u;
 
-    /// @brief Pan position offset relative to home
-    uint16_t _panHomeOffset = 0u;
-    /// @brief Tilt position offset relative to home
-    uint16_t _tiltHomeOffset = 0u;
+    /// @brief Position offset relative to home
+    uint16_t _homeOffset = 0u;
 
-    /// @brief Last pan encoder measured angular rate (rad/s)
-    float _lastPanRate = 0.0f;
-    /// @brief Last tilt encoder measured angular rate (rad/s)
-    float _lastTiltRate = 0.0f;
-
-    /// @brief Stepper drivers
-    a4988::A4988 _steppers[StepperID::NUM_STEPPERS];
+    /// @brief Last encoder measured angular rate (rad/s)
+    float _lastRate = 0.0f;
 
 private:
     /// @brief Private CLIAO signals
@@ -228,16 +214,7 @@ private:
     {
     public:
         SetRateEvt(QP::QSignal sig) : QP::QEvt(sig) {}
-        StepperID stepper;
         float omega;
-    };
-
-    /// @brief Generic stepper control event
-    class StepperControlEvt : public QP::QEvt
-    {
-    public:
-        StepperControlEvt(QP::QSignal sig) : QP::QEvt(sig) {}
-        StepperID stepper;
     };
 
     /// @brief Mode control event
@@ -257,12 +234,12 @@ private:
     /// @param[out] freq step frequency
     /// @param[out] resolution step resolution
     /// @return void
-    void GetFreqResolutionForRate(float omega, float& freq, a4988::StepResolution& resolution);
+    static void GetFreqResolutionForRate(float omega, float& freq, a4988::StepResolution& resolution);
 
     /// @brief Given a desired angular velocity, configure stepper drive pwm waveform
     /// @param[in] omega angular velocity
     /// @return Fault
-    Fault SetPWMFromRate(StepperID stepper, float omega);
+    Fault SetPWMFromRate(float omega);
 
     /// @brief Initial state
     Q_STATE_DECL(initial);
@@ -278,9 +255,9 @@ private:
     Q_STATE_DECL(active_cl);
     /// @brief Fault
     Q_STATE_DECL(error);
-};  // class TurretAO
+};  // class StepperAO
 
-inline void TurretAO::SetMode(Mode mode)
+inline void StepperAO::SetMode(Mode mode)
 {
     if (_isStarted)
     {
@@ -290,59 +267,54 @@ inline void TurretAO::SetMode(Mode mode)
     }
 }
 
-inline void TurretAO::SetRateSetpointDirect(StepperID stepper, float omega)
+inline void StepperAO::SetRateSetpointDirect(float omega)
 {
     if (_isStarted)
     {
         SetRateEvt* evt = Q_NEW(SetRateEvt, PrivateSignals::SET_RATE_DIRECT_SIG);
-        evt->stepper = stepper;
         evt->omega = omega;
         POST(evt, this);
     }
 }
 
-inline void TurretAO::SetRateSetpoint(StepperID stepper, float omega)
+inline void StepperAO::SetRateSetpoint(float omega)
 {
     if (_isStarted)
     {
         SetRateEvt* evt = Q_NEW(SetRateEvt, PrivateSignals::SET_RATE_SIG);
-        evt->stepper = stepper;
         evt->omega = omega;
         POST(evt, this);
     }
 }
 
-inline void TurretAO::Home(StepperID stepper)
+inline void StepperAO::Home()
 {
     if (_isStarted)
     {
-        StepperControlEvt* evt = Q_NEW(StepperControlEvt, PrivateSignals::HOME_SIG);
-        evt->stepper = stepper;
-        POST(evt, this);
+        static QP::QEvt evt(PrivateSignals::HOME_SIG);
+        POST(&evt, this);
     }
 }
 
-inline void TurretAO::Enable(StepperID stepper)
+inline void StepperAO::Enable()
 {
     if (_isStarted)
     {
-        StepperControlEvt* evt = Q_NEW(StepperControlEvt, PrivateSignals::ENABLE_SIG);
-        evt->stepper = stepper;
-        POST(evt, this);
+        static QP::QEvt evt(PrivateSignals::ENABLE_SIG);
+        POST(&evt, this);
     }
 }
 
-inline void TurretAO::Disable(StepperID stepper)
+inline void StepperAO::Disable()
 {
     if (_isStarted)
     {
-        StepperControlEvt* evt = Q_NEW(StepperControlEvt, PrivateSignals::DISABLE_SIG);
-        evt->stepper = stepper;
-        POST(evt, this);
+        static QP::QEvt evt(PrivateSignals::DISABLE_SIG);
+        POST(&evt, this);
     }
 }
 
-inline void TurretAO::StartEncoderStream()
+inline void StepperAO::StartEncoderStream()
 {
     if (_isStarted)
     {
@@ -351,7 +323,7 @@ inline void TurretAO::StartEncoderStream()
     }
 }
 
-inline void TurretAO::StopEncoderStream()
+inline void StepperAO::StopEncoderStream()
 {
     if (_isStarted)
     {
@@ -360,7 +332,7 @@ inline void TurretAO::StopEncoderStream()
     }
 }
 
-inline void TurretAO::Reset()
+inline void StepperAO::Reset()
 {
     if (_isStarted)
     {
@@ -369,6 +341,6 @@ inline void TurretAO::Reset()
     }
 }
 
-}  // namespace turret
+}  // namespace stepper
 
 #endif

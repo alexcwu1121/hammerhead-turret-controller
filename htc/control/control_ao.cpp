@@ -8,8 +8,8 @@
 #include "cli_ao.hpp"
 #include "gpio.h"
 #include "imu_ao.hpp"
+#include "stepper_ao.hpp"
 #include "thirdparty/printf.h"
-#include "turret_ao.hpp"
 
 /// @brief Published CAN ID lowest index
 static constexpr uint16_t PubCANIDIdx = 0x300;
@@ -62,7 +62,7 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
                     {
                         float rate = 0.0f;
                         memcpy(&rate, data, sizeof(float));
-                        turret::TurretAO::Inst().SetRateSetpoint(turret::StepperID::PAN, rate);
+                        stepper::StepperAO::PanInst().SetRateSetpoint(rate);
                     }
                     break;
                 }
@@ -72,7 +72,7 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
                     {
                         float rate = 0.0f;
                         memcpy(&rate, data, sizeof(float));
-                        turret::TurretAO::Inst().SetRateSetpoint(turret::StepperID::TILT, rate);
+                        stepper::StepperAO::TiltInst().SetRateSetpoint(rate);
                     }
                     break;
                 }
@@ -203,16 +203,29 @@ Q_STATE_DEF(ControlAO, root)
             }
             cli::CLIAO::Inst().Printf(buf);
 
-            // Print all turret fault statuses
-            static const char* turret = "Turret Subsystem\n\r";
+            // Print all pan stepper fault statuses
+            static const char* pan_stepper = "Pan Stepper Subsystem\n\r";
             memset(buf, 0U, sizeof(buf));
-            ptr = (char*)memcpy(buf, turret, strlen(turret));
-            ptr += strlen(turret);
-            for (uint8_t fault = 0; fault < turret::Fault::NUM_FAULTS; fault++)
+            ptr = (char*)memcpy(buf, pan_stepper, strlen(pan_stepper));
+            ptr += strlen(pan_stepper);
+            for (uint8_t fault = 0; fault < stepper::Fault::NUM_FAULTS; fault++)
             {
-                bool state = _faultStates[bsp::SubsystemID::TURRET_SUBSYSTEM][fault];
+                bool state = _faultStates[bsp::SubsystemID::PAN_STEPPER_SUBSYSTEM][fault];
                 ptr += snprintf(ptr, buf + cli::CLIAO::cliPrintBufSize - ptr, fmt,
-                                turret::FaultToStr((turret::Fault)fault), state);
+                                stepper::FaultToStr((stepper::Fault)fault), state);
+            }
+            cli::CLIAO::Inst().Printf(buf);
+
+            // Print all tilt stepper fault statuses
+            static const char* tilt_stepper = "Tilt Stepper Subsystem\n\r";
+            memset(buf, 0U, sizeof(buf));
+            ptr = (char*)memcpy(buf, tilt_stepper, strlen(tilt_stepper));
+            ptr += strlen(tilt_stepper);
+            for (uint8_t fault = 0; fault < stepper::Fault::NUM_FAULTS; fault++)
+            {
+                bool state = _faultStates[bsp::SubsystemID::TILT_STEPPER_SUBSYSTEM][fault];
+                ptr += snprintf(ptr, buf + cli::CLIAO::cliPrintBufSize - ptr, fmt,
+                                stepper::FaultToStr((stepper::Fault)fault), state);
             }
             cli::CLIAO::Inst().Printf(buf);
 

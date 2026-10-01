@@ -2,7 +2,7 @@
 #include "cli_ao.hpp"
 #include "control_ao.hpp"
 #include "imu_ao.hpp"
-#include "turret_ao.hpp"
+#include "stepper_ao.hpp"
 
 int main(void)
 {
@@ -41,8 +41,9 @@ int main(void)
     // ParamAO is highest priority because it doesn't do much + must start before everything else
     cli::CLIAO::Inst().Start(1U, bsp::SubsystemID::CLI_SUBSYSTEM);
     imu::IMUAO::Inst().Start(2U, bsp::SubsystemID::IMU_SUBSYSTEM);
-    turret::TurretAO::Inst().Start(3U, bsp::SubsystemID::TURRET_SUBSYSTEM);
-    control::ControlAO::Inst().Start(4U, bsp::SubsystemID::CONTROL_SUBSYSTEM);
+    stepper::StepperAO::PanInst().Start(3U, bsp::SubsystemID::PAN_STEPPER_SUBSYSTEM);
+    stepper::StepperAO::TiltInst().Start(4U, bsp::SubsystemID::TILT_STEPPER_SUBSYSTEM);
+    control::ControlAO::Inst().Start(5U, bsp::SubsystemID::CONTROL_SUBSYSTEM);
 
     // Start QF scheduler
     return QP::QF::run();

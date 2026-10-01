@@ -5,8 +5,8 @@
 #include "cli_ao.hpp"
 #include "control_ao.hpp"
 #include "imu_ao.hpp"
+#include "stepper_ao.hpp"
 #include "thirdparty/embedded_cli.h"
-#include "turret_ao.hpp"
 
 void cli::onClear(EmbeddedCli* cli, char* args, void* context)
 {
@@ -74,18 +74,6 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
     {
         case 1U:
         {
-            const char* cmd_str = embeddedCliGetToken(args, 1U);
-
-            if (strcmp(cmd_str, "startencstream") == 0)
-            {
-                turret::TurretAO::Inst().StartEncoderStream();
-                handled = true;
-            }
-            else if (strcmp(cmd_str, "stopencstream") == 0)
-            {
-                turret::TurretAO::Inst().StopEncoderStream();
-                handled = true;
-            }
             break;
         }
         case 2U:
@@ -93,17 +81,45 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
             const char* cmd_str = embeddedCliGetToken(args, 1U);
             const char* opt_str = embeddedCliGetToken(args, 2U);
 
-            if (strcmp(cmd_str, "disable") == 0)
+            if (strcmp(cmd_str, "startencstream") == 0)
             {
                 if (strcmp(opt_str, "pan") == 0 || strcmp(opt_str, "all") == 0)
                 {
-                    turret::TurretAO::Inst().Disable(turret::StepperID::PAN);
+                    stepper::StepperAO::PanInst().StartEncoderStream();
                     handled = true;
                 }
 
                 if (strcmp(opt_str, "tilt") == 0 || strcmp(opt_str, "all") == 0)
                 {
-                    turret::TurretAO::Inst().Disable(turret::StepperID::TILT);
+                    stepper::StepperAO::TiltInst().StartEncoderStream();
+                    handled = true;
+                }
+            }
+            else if (strcmp(cmd_str, "stopencstream") == 0)
+            {
+                if (strcmp(opt_str, "pan") == 0 || strcmp(opt_str, "all") == 0)
+                {
+                    stepper::StepperAO::PanInst().StopEncoderStream();
+                    handled = true;
+                }
+
+                if (strcmp(opt_str, "tilt") == 0 || strcmp(opt_str, "all") == 0)
+                {
+                    stepper::StepperAO::TiltInst().StopEncoderStream();
+                    handled = true;
+                }
+            }
+            else if (strcmp(cmd_str, "disable") == 0)
+            {
+                if (strcmp(opt_str, "pan") == 0 || strcmp(opt_str, "all") == 0)
+                {
+                    stepper::StepperAO::PanInst().Disable();
+                    handled = true;
+                }
+
+                if (strcmp(opt_str, "tilt") == 0 || strcmp(opt_str, "all") == 0)
+                {
+                    stepper::StepperAO::TiltInst().Disable();
                     handled = true;
                 }
             }
@@ -111,27 +127,13 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
             {
                 if (strcmp(opt_str, "pan") == 0 || strcmp(opt_str, "all") == 0)
                 {
-                    turret::TurretAO::Inst().Enable(turret::StepperID::PAN);
+                    stepper::StepperAO::PanInst().Enable();
                     handled = true;
                 }
 
                 if (strcmp(opt_str, "tilt") == 0 || strcmp(opt_str, "all") == 0)
                 {
-                    turret::TurretAO::Inst().Enable(turret::StepperID::TILT);
-                    handled = true;
-                }
-            }
-            else if (strcmp(cmd_str, "setmode") == 0)
-            {
-                if (strcmp(opt_str, "ol") == 0)
-                {
-                    turret::TurretAO::Inst().SetMode(turret::Mode::OPEN_LOOP);
-                    handled = true;
-                }
-
-                if (strcmp(opt_str, "cl") == 0)
-                {
-                    turret::TurretAO::Inst().SetMode(turret::Mode::CLOSED_LOOP);
+                    stepper::StepperAO::TiltInst().Enable();
                     handled = true;
                 }
             }
@@ -140,7 +142,28 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
         case 3U:
         {
             const char* cmd_str = embeddedCliGetToken(args, 1U);
-            if (strcmp(cmd_str, "setratedirect") == 0)
+            if (strcmp(cmd_str, "setmode") == 0)
+            {
+                const char* motor_str = embeddedCliGetToken(args, 2U);
+                const char* mode_str = embeddedCliGetToken(args, 3U);
+                stepper::Mode mode;
+                if (strcmp(mode_str, "ol") == 0) { mode = stepper::Mode::OPEN_LOOP; }
+                else if (strcmp(mode_str, "cl") == 0) { mode = stepper::Mode::CLOSED_LOOP; }
+                else { break; }
+
+                if (strcmp(motor_str, "pan") == 0 || strcmp(motor_str, "all") == 0)
+                {
+                    stepper::StepperAO::PanInst().SetMode(mode);
+                    handled = true;
+                }
+
+                if (strcmp(motor_str, "tilt") == 0 || strcmp(motor_str, "all") == 0)
+                {
+                    stepper::StepperAO::TiltInst().SetMode(mode);
+                    handled = true;
+                }
+            }
+            else if (strcmp(cmd_str, "setratedirect") == 0)
             {
                 const char* motor_str = embeddedCliGetToken(args, 2U);
                 const char* rate_str = embeddedCliGetToken(args, 3U);
@@ -148,13 +171,13 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
 
                 if (strcmp(motor_str, "pan") == 0 || strcmp(motor_str, "all") == 0)
                 {
-                    turret::TurretAO::Inst().SetRateSetpointDirect(turret::StepperID::PAN, rate);
+                    stepper::StepperAO::PanInst().SetRateSetpointDirect(rate);
                     handled = true;
                 }
 
                 if (strcmp(motor_str, "tilt") == 0 || strcmp(motor_str, "all") == 0)
                 {
-                    turret::TurretAO::Inst().SetRateSetpointDirect(turret::StepperID::TILT, rate);
+                    stepper::StepperAO::TiltInst().SetRateSetpointDirect(rate);
                     handled = true;
                 }
             }
@@ -166,13 +189,13 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
 
                 if (strcmp(motor_str, "pan") == 0 || strcmp(motor_str, "all") == 0)
                 {
-                    turret::TurretAO::Inst().SetRateSetpoint(turret::StepperID::PAN, rate);
+                    stepper::StepperAO::PanInst().SetRateSetpoint(rate);
                     handled = true;
                 }
 
                 if (strcmp(motor_str, "tilt") == 0 || strcmp(motor_str, "all") == 0)
                 {
-                    turret::TurretAO::Inst().SetRateSetpoint(turret::StepperID::TILT, rate);
+                    stepper::StepperAO::TiltInst().SetRateSetpoint(rate);
                     handled = true;
                 }
             }
@@ -189,13 +212,13 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
         // Help dialogue
         cli::CLIAO::Inst().Printf(
             "Usage:\n\r"
-            "\tturret startencstream\n\r"
-            "\tturret stopencstream\n\r"
-            "\tturret setmode [Stepper (ol|cl)]\n\r"
-            "\tturret setratedirect [Stepper (all|pan|tilt)] [rate (rad/s)]\n\r"
-            "\tturret setrate [Stepper (all|pan|tilt)] [rate (rad/s)]\n\r"
-            "\tturret disable [Stepper (all|pan|tilt)]\n\r"
-            "\tturret enable [Stepper (all|pan|tilt)]\n\r");
+            "\tturret startencstream [all|pan|tilt]\n\r"
+            "\tturret stopencstream [all|pan|tilt]\n\r"
+            "\tturret setmode [all|pan|tilt] [ol|cl]\n\r"
+            "\tturret setratedirect [all|pan|tilt] [rate (rad/s)]\n\r"
+            "\tturret setrate [all|pan|tilt] [rate (rad/s)]\n\r"
+            "\tturret disable [all|pan|tilt]\n\r"
+            "\tturret enable [all|pan|tilt]\n\r");
     }
 }
 

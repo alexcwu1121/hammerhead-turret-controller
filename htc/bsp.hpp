@@ -24,11 +24,46 @@ constexpr std::uint32_t APB2_CLOCK_FREQUENCY {48000000U};
 enum SubsystemID : uint8_t
 {
     CLI_SUBSYSTEM = 0U,
-    TURRET_SUBSYSTEM,
+    PAN_STEPPER_SUBSYSTEM,
+    TILT_STEPPER_SUBSYSTEM,
     IMU_SUBSYSTEM,
     CONTROL_SUBSYSTEM,
     NUM_SUBSYSTEMS  // Keep this last
 };
+
+/// @brief Subsystem ID to string table
+/// @param id
+/// @return
+constexpr const char* SubsystemIDToStr(SubsystemID id)
+{
+    switch (id)
+    {
+        case SubsystemID::CLI_SUBSYSTEM:
+        {
+            return "CLI_SUBSYSTEM";
+        }
+        case SubsystemID::PAN_STEPPER_SUBSYSTEM:
+        {
+            return "PAN_STEPPER_SUBSYSTEM";
+        }
+        case SubsystemID::TILT_STEPPER_SUBSYSTEM:
+        {
+            return "TILT_STEPPER_SUBSYSTEM";
+        }
+        case SubsystemID::IMU_SUBSYSTEM:
+        {
+            return "IMU_SUBSYSTEM";
+        }
+        case SubsystemID::CONTROL_SUBSYSTEM:
+        {
+            return "CONTROL_SUBSYSTEM";
+        }
+        default:
+        {
+            return "";
+        }
+    }
+}
 
 /// @brief Public QP signals
 enum PublicSignals : QP::QSignal

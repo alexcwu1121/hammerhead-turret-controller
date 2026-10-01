@@ -1,4 +1,4 @@
-#include "turret_ao.hpp"
+#include "stepper_ao.hpp"
 
 #include <algorithm>
 #include <cstdlib>
@@ -9,47 +9,65 @@
 #include "qpcpp.hpp"
 #include "tim.h"
 
-namespace turret
+namespace stepper
 {
-TurretAO::TurretAO() :
+/// @brief Pan stepper driver
+static a4988::A4988 panDriver = a4988::A4988Peripherals {.stepPinPort = *TILT_STEP_GPIO_Port,
+                                                         .stepPinNum = TILT_STEP_Pin,
+                                                         .ms1PinPort = *TILT_MS1_GPIO_Port,
+                                                         .ms1PinNum = TILT_MS1_Pin,
+                                                         .ms2PinPort = *TILT_MS2_GPIO_Port,
+                                                         .ms2PinNum = TILT_MS2_Pin,
+                                                         .ms3PinPort = *TILT_MS3_GPIO_Port,
+                                                         .ms3PinNum = TILT_MS3_Pin,
+                                                         .dirPinPort = *TILT_DIR_GPIO_Port,
+                                                         .dirPinNum = TILT_DIR_Pin,
+                                                         .resetPinPort = *TILT_RESET_GPIO_Port,
+                                                         .resetPinNum = TILT_RESET_Pin,
+                                                         .pwmClockFrequency = bsp::APB2_CLOCK_FREQUENCY,
+                                                         .htim = htim17,
+                                                         .htimCh = TIM_CHANNEL_1};
+
+/// @brief Tilt stepper driver
+static a4988::A4988 tiltDriver = a4988::A4988Peripherals {.stepPinPort = *PAN_STEP_GPIO_Port,
+                                                          .stepPinNum = PAN_STEP_Pin,
+                                                          .ms1PinPort = *PAN_MS1_GPIO_Port,
+                                                          .ms1PinNum = PAN_MS1_Pin,
+                                                          .ms2PinPort = *PAN_MS2_GPIO_Port,
+                                                          .ms2PinNum = PAN_MS2_Pin,
+                                                          .ms3PinPort = *PAN_MS3_GPIO_Port,
+                                                          .ms3PinNum = PAN_MS3_Pin,
+                                                          .dirPinPort = *PAN_DIR_GPIO_Port,
+                                                          .dirPinNum = PAN_DIR_Pin,
+                                                          .resetPinPort = *PAN_RESET_GPIO_Port,
+                                                          .resetPinNum = PAN_RESET_Pin,
+                                                          .pwmClockFrequency = bsp::APB2_CLOCK_FREQUENCY,
+                                                          .htim = htim1,
+                                                          .htimCh = TIM_CHANNEL_1};
+
+StepperAO::StepperAO(a4988::A4988& stepperDriver, TIM_HandleTypeDef& htim) :
     QP::QActive(&initial),
     _faultRecoveryTimer(this, PrivateSignals::RESET_SIG, 0U),
-    _encoderTimer(this, PrivateSignals::POLL_ENCODER_SIG, 0U),
+    _encoderPollTimer(this, PrivateSignals::POLL_ENCODER_SIG, 0U),
     _encoderStreamTimer(this, PrivateSignals::ENCODER_STREAM_SIG, 0U),
     _clTimer(this, PrivateSignals::CL_UPDATE_SIG, 0U),
-    _steppers {a4988::A4988({.stepPinPort = *PAN_STEP_GPIO_Port,
-                             .stepPinNum = PAN_STEP_Pin,
-                             .ms1PinPort = *PAN_MS1_GPIO_Port,
-                             .ms1PinNum = PAN_MS1_Pin,
-                             .ms2PinPort = *PAN_MS2_GPIO_Port,
-                             .ms2PinNum = PAN_MS2_Pin,
-                             .ms3PinPort = *PAN_MS3_GPIO_Port,
-                             .ms3PinNum = PAN_MS3_Pin,
-                             .dirPinPort = *PAN_DIR_GPIO_Port,
-                             .dirPinNum = PAN_DIR_Pin,
-                             .resetPinPort = *PAN_RESET_GPIO_Port,
-                             .resetPinNum = PAN_RESET_Pin,
-                             .pwmClockFrequency = bsp::APB2_CLOCK_FREQUENCY,
-                             .htim = htim1,
-                             .htimCh = TIM_CHANNEL_1}),
-               a4988::A4988({.stepPinPort = *TILT_STEP_GPIO_Port,
-                             .stepPinNum = TILT_STEP_Pin,
-                             .ms1PinPort = *TILT_MS1_GPIO_Port,
-                             .ms1PinNum = TILT_MS1_Pin,
-                             .ms2PinPort = *TILT_MS2_GPIO_Port,
-                             .ms2PinNum = TILT_MS2_Pin,
-                             .ms3PinPort = *TILT_MS3_GPIO_Port,
-                             .ms3PinNum = TILT_MS3_Pin,
-                             .dirPinPort = *TILT_DIR_GPIO_Port,
-                             .dirPinNum = TILT_DIR_Pin,
-                             .resetPinPort = *TILT_RESET_GPIO_Port,
-                             .resetPinNum = TILT_RESET_Pin,
-                             .pwmClockFrequency = bsp::APB2_CLOCK_FREQUENCY,
-                             .htim = htim17,
-                             .htimCh = TIM_CHANNEL_1})}
+    _stepperDriver(stepperDriver),
+    _encoderTim(htim)
 {}
 
-void TurretAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
+StepperAO& StepperAO::PanInst()
+{
+    static StepperAO inst(panDriver, htim2);
+    return inst;
+}
+
+StepperAO& StepperAO::TiltInst()
+{
+    static StepperAO inst(tiltDriver, htim3);
+    return inst;
+}
+
+void StepperAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
 {
     _id = id;
     _isStarted = true;
@@ -59,7 +77,7 @@ void TurretAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
                 nullptr, 0U);  // no stack storage
 }
 
-void TurretAO::SetFault(bsp::SubsystemID id, uint8_t fault, bool active)
+void StepperAO::SetFault(bsp::SubsystemID id, uint8_t fault, bool active)
 {
     if (_faultStates[fault] != active)
     {
@@ -74,7 +92,7 @@ void TurretAO::SetFault(bsp::SubsystemID id, uint8_t fault, bool active)
     }
 }
 
-void TurretAO::GetFreqResolutionForRate(float omega, float& freq, a4988::StepResolution& resolution)
+void StepperAO::GetFreqResolutionForRate(float omega, float& freq, a4988::StepResolution& resolution)
 {
     // compute full step frequency based on stepper resolution
     freq = _gearRatio * std::abs(omega) * _stepsPerRev / 6.28;
@@ -84,7 +102,7 @@ void TurretAO::GetFreqResolutionForRate(float omega, float& freq, a4988::StepRes
     freq *= 8;  // NOLINT
 }
 
-Fault TurretAO::SetPWMFromRate(StepperID stepper, float omega)
+Fault StepperAO::SetPWMFromRate(float omega)
 {
     // compute direction
     a4988::StepDir dir = omega > 0 ? a4988::StepDir::CCW : a4988::StepDir::CW;
@@ -95,23 +113,23 @@ Fault TurretAO::SetPWMFromRate(StepperID stepper, float omega)
     GetFreqResolutionForRate(omega, freq, resolution);
 
     // set direction and frequency
-    a4988::Fault fault = _steppers[stepper].SetDir(dir);
+    a4988::Fault fault = _stepperDriver.SetDir(dir);
     if (fault != a4988::Fault::NO_FAULT) { return Fault::SET_DIR_FAILED; }
 
-    fault = _steppers[stepper].SetResolution(resolution);
+    fault = _stepperDriver.SetResolution(resolution);
     if (fault != a4988::Fault::NO_FAULT) { return Fault::SET_RES_FAILED; }
 
-    fault = _steppers[stepper].SetFrequency(freq);
+    fault = _stepperDriver.SetFrequency(freq);
     if (fault != a4988::Fault::NO_FAULT) { return Fault::SET_FREQ_FAILED; }
 }
 
-Q_STATE_DEF(TurretAO, initial)
+Q_STATE_DEF(StepperAO, initial)
 {
     Q_UNUSED_PAR(e);
     return tran(&initializing);
 }
 
-Q_STATE_DEF(TurretAO, root)
+Q_STATE_DEF(StepperAO, root)
 {
     QP::QState status_;
     switch (e->sig)
@@ -128,7 +146,7 @@ Q_STATE_DEF(TurretAO, root)
         }
         case PrivateSignals::DISABLE_SIG:
         {
-            _steppers[Q_EVT_CAST(StepperControlEvt)->stepper].Disable();
+            _stepperDriver.Disable();
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -141,17 +159,15 @@ Q_STATE_DEF(TurretAO, root)
     return status_;
 }
 
-Q_STATE_DEF(TurretAO, initializing)
+Q_STATE_DEF(StepperAO, initializing)
 {
     QP::QState status_;
     switch (e->sig)
     {
         case Q_ENTRY_SIG:
         {
-            // Initialize stepper drivers
-            a4988::Fault fault;
-            for (const auto& stepper : _steppers) { fault = stepper.Init(); }
-            if (fault != a4988::Fault::NO_FAULT)
+            // Initialize stepper driver
+            if (_stepperDriver.Init() != a4988::Fault::NO_FAULT)
             {
                 // Update fault status
                 SetFault(_id, Fault::STEPPER_INIT_FAILED, true);
@@ -164,10 +180,8 @@ Q_STATE_DEF(TurretAO, initializing)
                 break;
             }
 
-            // Initialize encoders
-            HAL_StatusTypeDef pan_enc_fault = HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
-            HAL_StatusTypeDef tilt_enc_fault = HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
-            if (pan_enc_fault != HAL_OK || tilt_enc_fault != HAL_OK)
+            // Initialize encoder
+            if (HAL_TIM_Encoder_Start(&_encoderTim, TIM_CHANNEL_ALL) != HAL_OK)
             {
                 // Update fault status
                 SetFault(_id, Fault::ENCODER_INIT_FAILED, true);
@@ -201,62 +215,68 @@ Q_STATE_DEF(TurretAO, initializing)
     return status_;
 }
 
-Q_STATE_DEF(TurretAO, active)
+Q_STATE_DEF(StepperAO, active)
 {
     QP::QState status_;
     switch (e->sig)
     {
         case Q_ENTRY_SIG:
         {
-            _encoderTimer.armX(_encoderTimerInterval, _encoderTimerInterval);
+            _encoderPollTimer.armX(_encoderPollTimerInterval, _encoderPollTimerInterval);
 
-            // set initial encoder positions
-            _lastPanEnc = __HAL_TIM_GET_COUNTER(&htim2);
-            _lastTiltEnc = __HAL_TIM_GET_COUNTER(&htim3);
+            // set initial encoder position
+            _lastEnc = __HAL_TIM_GET_COUNTER(&_encoderTim);
 
             status_ = Q_RET_HANDLED;
             break;
         }
         case Q_EXIT_SIG:
         {
-            _encoderTimer.disarm();
+            _encoderPollTimer.disarm();
             status_ = Q_RET_HANDLED;
             break;
         }
         case PrivateSignals::SET_MODE_SIG:
         {
-            if (Q_EVT_CAST(SetModeEvt)->mode == Mode::OPEN_LOOP) { status_ = tran(&active_ol); }
-            else if (Q_EVT_CAST(SetModeEvt)->mode == Mode::CLOSED_LOOP) { status_ = tran(&active_cl); }
-            else { status_ = Q_RET_HANDLED; }
+            switch (Q_EVT_CAST(SetModeEvt)->mode)
+            {
+                case Mode::OPEN_LOOP:
+                {
+                    status_ = tran(&active_ol);
+                    break;
+                }
+                case Mode::CLOSED_LOOP:
+                {
+                    status_ = tran(&active_cl);
+                    break;
+                }
+                default:
+                {
+                    status_ = Q_RET_HANDLED;
+                    break;
+                }
+            }
             break;
         }
         case PrivateSignals::ENABLE_SIG:
         {
-            _steppers[Q_EVT_CAST(StepperControlEvt)->stepper].Enable();
+            _stepperDriver.Enable();
             status_ = Q_RET_HANDLED;
             break;
         }
         case PrivateSignals::POLL_ENCODER_SIG:
         {
-            uint16_t pan_enc = __HAL_TIM_GET_COUNTER(&htim2);
-            uint16_t tilt_enc = __HAL_TIM_GET_COUNTER(&htim3);
+            uint16_t enc = __HAL_TIM_GET_COUNTER(&_encoderTim);
 
-            // compute delta in encoder positions since last sample
-            int16_t pan_enc_delta = static_cast<int16_t>(pan_enc - _lastPanEnc);
-            int16_t tilt_enc_delta = static_cast<int16_t>(tilt_enc - _lastTiltEnc);
-
-            // IIR filter
-            auto iir = [](float& prior, const float& obs) { prior += _iirAlpha * (obs - prior); };
+            // compute delta in encoder position since last sample
+            int16_t enc_delta = static_cast<int16_t>(enc - _lastEnc);
 
             // convert to rad/s and iir filter
-            iir(_lastPanRate,
-                static_cast<float>(_encoderTimerFreq) * pan_enc_delta * 6.28f / (_encoderCPR * _gearRatio));
-            iir(_lastTiltRate,
-                static_cast<float>(_encoderTimerFreq) * tilt_enc_delta * 6.28f / (_encoderCPR * _gearRatio));
+            float obs = static_cast<float>(_encoderPollTimerFreq) * enc_delta * _counts2Rad;
+            _lastRate += _iirAlpha * (obs - _lastRate);
 
-            // update last encoder values
-            _lastPanEnc = pan_enc;
-            _lastTiltEnc = tilt_enc;
+            // update last encoder value
+            _lastEnc = enc;
 
             status_ = Q_RET_HANDLED;
             break;
@@ -278,10 +298,11 @@ Q_STATE_DEF(TurretAO, active)
             // Print encoder position and rate data
             cli::CLIAO::Inst().Printf(
                 ">>>>>>>>>>>>>>\n\r"
-                "Pan Enc Rate: %+7.4f rad/s\n\r"
-                "Tilt Enc Rate: %+7.4f rad/s\n\r"
+                "%s\n\r"
+                "Encoder Rate: %+7.4f rad/s\n\r"
+                "Encoder Pos:  %+7.4f rad\n\r"
                 ">>>>>>>>>>>>>>\n\r",
-                _lastPanRate, _lastTiltRate);
+                bsp::SubsystemIDToStr(_id), _lastRate, static_cast<float>(_lastEnc) * _counts2Rad);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -294,7 +315,7 @@ Q_STATE_DEF(TurretAO, active)
     return status_;
 }
 
-Q_STATE_DEF(TurretAO, active_ol)
+Q_STATE_DEF(StepperAO, active_ol)
 {
     QP::QState status_;
     switch (e->sig)
@@ -313,7 +334,7 @@ Q_STATE_DEF(TurretAO, active_ol)
         {
             // Set PWM waveform
             float omega_clamped = std::clamp(Q_EVT_CAST(SetRateEvt)->omega, -_maxRate, _maxRate);
-            Fault fault = SetPWMFromRate(Q_EVT_CAST(SetRateEvt)->stepper, omega_clamped);
+            Fault fault = SetPWMFromRate(omega_clamped);
 
             if (fault != NO_FAULT)
             {
@@ -338,73 +359,47 @@ Q_STATE_DEF(TurretAO, active_ol)
     return status_;
 }
 
-Q_STATE_DEF(TurretAO, active_cl)
+Q_STATE_DEF(StepperAO, active_cl)
 {
     QP::QState status_;
     switch (e->sig)
     {
         case Q_ENTRY_SIG:
         {
+            // start timer for control loop updates
             _clTimer.armX(_clTimerInterval, _clTimerInterval);
 
-            // initialize rate setpoints to current angular velocities
-            _panRateSetpoint = _lastPanRate;
-            _tiltRateSetpoint = _lastTiltRate;
+            // initialize rate setpoint to current angular velocities
+            _rateSetpoint = _lastRate;
 
-            // initialize rate commands to current angular velocities
+            // initialize rate command to current angular velocity
             // this assumes open loop angular velocity commands are close to reality, which is pretty much true
-            _panRateCommand = _lastPanRate;
-            _tiltRateCommand = _lastTiltRate;
+            _rateCommand = _lastRate;
 
             status_ = Q_RET_HANDLED;
             break;
         }
         case Q_EXIT_SIG:
-            SetPWMFromRate(Q_EVT_CAST(SetRateEvt)->stepper, Q_EVT_CAST(SetRateEvt)->omega);
-            {
-                _clTimer.disarm();
-                status_ = Q_RET_HANDLED;
-                break;
-            }
+        {
+            _clTimer.disarm();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         case PrivateSignals::SET_RATE_SIG:
         {
-            float omega_clamped = std::clamp(Q_EVT_CAST(SetRateEvt)->omega, -_maxRate, _maxRate);
-
-            if (Q_EVT_CAST(SetRateEvt)->stepper == StepperID::PAN) { _panRateSetpoint = omega_clamped; }
-            else if (Q_EVT_CAST(SetRateEvt)->stepper == StepperID::TILT) { _tiltRateSetpoint = omega_clamped; }
-
+            _rateSetpoint = std::clamp(Q_EVT_CAST(SetRateEvt)->omega, -_maxRate, _maxRate);
             status_ = Q_RET_HANDLED;
             break;
         }
         case PrivateSignals::CL_UPDATE_SIG:
         {
-            float pan_rate_error = _panRateSetpoint - _lastPanRate;
-            float pan_correction_mag = std::min(std::abs(pan_rate_error), _clSlewRate);
-            if (pan_rate_error > 0) { _panRateCommand += pan_correction_mag; }
-            else if (pan_rate_error < 0) { _panRateCommand -= pan_correction_mag; }
+            float rate_error = _rateSetpoint - _lastRate;
+            float correction_mag = std::min(std::abs(rate_error), _clSlewRate);
+            if (rate_error > 0) { _rateCommand += correction_mag; }
+            else if (rate_error < 0) { _rateCommand -= correction_mag; }
 
-            float tilt_rate_error = _tiltRateSetpoint - _lastTiltRate;
-            float tilt_correction_mag = std::min(std::abs(tilt_rate_error), _clSlewRate);
-            if (tilt_rate_error > 0) { _tiltRateCommand += tilt_correction_mag; }
-            else if (tilt_rate_error < 0) { _tiltRateCommand -= pan_correction_mag; }
-
-            // Set pan PWM waveform
-            Fault fault = SetPWMFromRate(StepperID::PAN, _panRateCommand);
-
-            if (fault != NO_FAULT)
-            {
-                // Update fault status
-                SetFault(_id, fault, true);
-
-                // Just indicate a fault in this case
-
-                status_ = Q_RET_HANDLED;
-                break;
-            }
-
-            // Set tilt PWM waveform
-            fault = SetPWMFromRate(StepperID::TILT, _tiltRateCommand);
-
+            // Set PWM waveform
+            auto fault = SetPWMFromRate(_rateCommand);
             if (fault != NO_FAULT)
             {
                 // Update fault status
@@ -428,7 +423,7 @@ Q_STATE_DEF(TurretAO, active_cl)
     return status_;
 }
 
-Q_STATE_DEF(TurretAO, error)
+Q_STATE_DEF(StepperAO, error)
 {
     QP::QState status_;
     switch (e->sig)
@@ -459,4 +454,4 @@ Q_STATE_DEF(TurretAO, error)
     }
     return status_;
 }
-}  // namespace turret
+}  // namespace stepper

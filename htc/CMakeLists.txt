@@ -34,7 +34,7 @@ target_sources(${CMAKE_PROJECT_NAME}
         imu/bmi270.cpp
         imu/imu_ao.cpp
         turret/a4988.cpp
-        turret/turret_ao.cpp
+        turret/stepper_ao.cpp
         control/control_ao.cpp
 )
 target_link_libraries(${CMAKE_PROJECT_NAME}
