@@ -19,7 +19,7 @@ target_include_directories(${CMAKE_PROJECT_NAME}
         ./
         cli/
         imu/
-        turret/
+        stepper/
         control/
 )
 target_sources(${CMAKE_PROJECT_NAME}
@@ -33,8 +33,8 @@ target_sources(${CMAKE_PROJECT_NAME}
         cli/thirdparty/printf.c
         imu/bmi270.cpp
         imu/imu_ao.cpp
-        turret/a4988.cpp
-        turret/stepper_ao.cpp
+        stepper/a4988.cpp
+        stepper/stepper_ao.cpp
         control/control_ao.cpp
 )
 target_link_libraries(${CMAKE_PROJECT_NAME}
