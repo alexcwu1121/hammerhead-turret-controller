@@ -149,6 +149,7 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
                 stepper::Mode mode;
                 if (strcmp(mode_str, "ol") == 0) { mode = stepper::Mode::OPEN_LOOP; }
                 else if (strcmp(mode_str, "cl") == 0) { mode = stepper::Mode::CLOSED_LOOP; }
+                else if (strcmp(mode_str, "clp") == 0) { mode = stepper::Mode::CLOSED_LOOP_POS; }
                 else { break; }
 
                 if (strcmp(motor_str, "pan") == 0 || strcmp(motor_str, "all") == 0)
@@ -199,6 +200,24 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
                     handled = true;
                 }
             }
+            else if (strcmp(cmd_str, "setpos") == 0)
+            {
+                const char* motor_str = embeddedCliGetToken(args, 2U);
+                const char* pos_str = embeddedCliGetToken(args, 3U);
+                float pos = strtofS(pos_str);
+
+                if (strcmp(motor_str, "pan") == 0 || strcmp(motor_str, "all") == 0)
+                {
+                    stepper::StepperAO::PanInst().SetPositionSetpoint(pos);
+                    handled = true;
+                }
+
+                if (strcmp(motor_str, "tilt") == 0 || strcmp(motor_str, "all") == 0)
+                {
+                    stepper::StepperAO::TiltInst().SetPositionSetpoint(pos);
+                    handled = true;
+                }
+            }
             break;
         }
         default:
@@ -214,9 +233,10 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
             "Usage:\n\r"
             "\tturret startencstream [all|pan|tilt]\n\r"
             "\tturret stopencstream [all|pan|tilt]\n\r"
-            "\tturret setmode [all|pan|tilt] [ol|cl]\n\r"
+            "\tturret setmode [all|pan|tilt] [ol|cl|clp]\n\r"
             "\tturret setratedirect [all|pan|tilt] [rate (rad/s)]\n\r"
             "\tturret setrate [all|pan|tilt] [rate (rad/s)]\n\r"
+            "\tturret setpos [all|pan|tilt] [pos (rad)]\n\r"
             "\tturret disable [all|pan|tilt]\n\r"
             "\tturret enable [all|pan|tilt]\n\r");
     }

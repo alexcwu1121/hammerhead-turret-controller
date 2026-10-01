@@ -45,10 +45,11 @@ static a4988::A4988 tiltDriver = a4988::A4988Peripherals {.stepPinPort = *PAN_ST
                                                           .htim = htim1,
                                                           .htimCh = TIM_CHANNEL_1};
 
-StepperAO::StepperAO(a4988::A4988& stepperDriver, TIM_HandleTypeDef& htim) :
+StepperAO::StepperAO(a4988::A4988& stepperDriver, TIM_HandleTypeDef& htim, StepperOpt opt) :
     QP::QActive(&initial),
     _stepperDriver(stepperDriver),
     _encoderTim(htim),
+    _opt(opt),
     _faultRecoveryTimer(this, PrivateSignals::RESET_SIG, 0U),
     _encoderPollTimer(this, PrivateSignals::POLL_ENCODER_SIG, 0U),
     _clTimer(this, PrivateSignals::CL_UPDATE_SIG, 0U),
@@ -57,13 +58,13 @@ StepperAO::StepperAO(a4988::A4988& stepperDriver, TIM_HandleTypeDef& htim) :
 
 StepperAO& StepperAO::PanInst()
 {
-    static StepperAO inst(panDriver, htim2);
+    static StepperAO inst(panDriver, htim2, {.homeOffset = 0.0f});
     return inst;
 }
 
 StepperAO& StepperAO::TiltInst()
 {
-    static StepperAO inst(tiltDriver, htim3);
+    static StepperAO inst(tiltDriver, htim3, {.homeOffset = 0.0f});
     return inst;
 }
 
@@ -207,7 +208,8 @@ Q_STATE_DEF(StepperAO, initializing)
         }
         case PrivateSignals::INITIALIZED_SIG:
         {
-            status_ = tran(&active_cl);
+            // Start in closed loop position control mode
+            status_ = tran(&active_cl_pos);
             break;
         }
         default:
@@ -231,6 +233,9 @@ Q_STATE_DEF(StepperAO, active)
             // set initial encoder position
             _lastEnc = __HAL_TIM_GET_COUNTER(&_encoderTim);
 
+            // also set initial absolute encoder position
+            _absLastPos = _lastEnc;
+
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -252,6 +257,11 @@ Q_STATE_DEF(StepperAO, active)
                 case Mode::CLOSED_LOOP:
                 {
                     status_ = tran(&active_cl);
+                    break;
+                }
+                case Mode::CLOSED_LOOP_POS:
+                {
+                    status_ = tran(&active_cl_pos);
                     break;
                 }
                 default:
@@ -284,6 +294,9 @@ Q_STATE_DEF(StepperAO, active)
             // update last encoder value
             _lastEnc = enc;
 
+            // also compute absolute angle relative to home out of convenience
+            _absLastPos = _absLastPos + enc_delta;
+
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -308,7 +321,7 @@ Q_STATE_DEF(StepperAO, active)
                 "Encoder Rate: %+7.4f rad/s\n\r"
                 "Encoder Pos:  %+7.4f rad\n\r"
                 ">>>>>>>>>>>>>>\n\r",
-                bsp::SubsystemIDToStr(_id), _lastRate, static_cast<float>(_lastEnc) * _counts2Rad);
+                bsp::SubsystemIDToStr(_id), _lastRate, static_cast<float>(_absLastPos - _homeOffset) * _counts2Rad);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -339,8 +352,8 @@ Q_STATE_DEF(StepperAO, active_ol)
         case PrivateSignals::SET_RATE_DIRECT_SIG:
         {
             // Set PWM waveform
-            float omega_clamped = std::clamp(Q_EVT_CAST(SetRateEvt)->omega, -_maxRate, _maxRate);
-            Fault fault = SetPWMFromRate(omega_clamped);
+            float omega = std::clamp(Q_EVT_CAST(SetpointEvt)->setpoint, -_maxRate, _maxRate);
+            Fault fault = SetPWMFromRate(omega);
 
             if (fault != NO_FAULT)
             {
@@ -393,7 +406,7 @@ Q_STATE_DEF(StepperAO, active_cl)
         }
         case PrivateSignals::SET_RATE_SIG:
         {
-            _rateSetpoint = std::clamp(Q_EVT_CAST(SetRateEvt)->omega, -_maxRate, _maxRate);
+            _rateSetpoint = std::clamp(Q_EVT_CAST(SetpointEvt)->setpoint, -_maxRate, _maxRate);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -423,6 +436,56 @@ Q_STATE_DEF(StepperAO, active_cl)
         default:
         {
             status_ = super(&active);
+            break;
+        }
+    }
+    return status_;
+}
+
+Q_STATE_DEF(StepperAO, active_cl_pos)
+{
+    QP::QState status_;
+    switch (e->sig)
+    {
+        case Q_ENTRY_SIG:
+        {
+            // use the same update timer as rate control
+            /// TODO: if we need rate decoupling, consider adding another timer
+
+            // Initialize position setpoint to current position
+            _posSetpoint = _absLastPos * _counts2Rad;
+
+            // refresh pid gains
+            _posPID.SetGains(_posKp, _posKi, _posKd);
+
+            // reset PID controller state
+            _posPID.Reset();
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::SET_POS_SIG:
+        {
+            _posSetpoint = Q_EVT_CAST(SetpointEvt)->setpoint;
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::CL_UPDATE_SIG:
+        {
+            // Position control loop update
+            _rateSetpoint = _posPID.Update(_posSetpoint, (_absLastPos - _homeOffset) * _counts2Rad,
+                                           1.0f / static_cast<float>(_clTimerFreq));
+
+            // Saturate rate setpoint
+            _rateSetpoint = std::clamp(_rateSetpoint, -_maxRate, _maxRate);
+
+            // Mark as unhandled so this event propagates up a level to the rate control loop
+            status_ = Q_RET_UNHANDLED;
+            break;
+        }
+        default:
+        {
+            status_ = super(&active_cl);
             break;
         }
     }

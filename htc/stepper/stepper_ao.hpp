@@ -3,6 +3,7 @@
 
 #include "a4988.hpp"
 #include "bsp.hpp"
+#include "pid.hpp"
 #include "qpcpp.hpp"
 
 namespace stepper
@@ -72,7 +73,15 @@ enum Mode : uint8_t
 {
     OPEN_LOOP = 0U,
     CLOSED_LOOP,
+    CLOSED_LOOP_POS,
     NUM_MODES
+};
+
+/// @brief Stepper options struct
+struct StepperOpt
+{
+    /// @brief Offset of home position relative to homing trigger position in radians
+    float homeOffset;
 };
 
 /// @brief Stepper AO
@@ -80,7 +89,7 @@ class StepperAO : public QP::QActive
 {
 public:
     /// @brief Constructor
-    StepperAO(a4988::A4988& stepperDriver, TIM_HandleTypeDef& htim);
+    StepperAO(a4988::A4988& stepperDriver, TIM_HandleTypeDef& htim, StepperOpt opt);
     StepperAO(const StepperAO&) = delete;
     StepperAO& operator=(const StepperAO&) = delete;
     StepperAO(StepperAO&&) = delete;
@@ -107,6 +116,9 @@ public:
 
     /// @brief Set a speed setpoint (rad/s)
     inline void SetRateSetpoint(float omega);
+
+    /// @brief Set a position setpoint (rad)
+    inline void SetPositionSetpoint(float pos);
 
     /// @brief Start homing sequence
     inline void Home();
@@ -140,6 +152,9 @@ private:
     a4988::A4988& _stepperDriver;
     /// @brief Encoder timer handle
     TIM_HandleTypeDef& _encoderTim;
+    /// TODO: absorb a lot of constants below into stepper options as needed
+    /// @brief Stepper options
+    StepperOpt _opt;
 
     /// @brief Internal fault recovery timer
     QP::QTimeEvt _faultRecoveryTimer;
@@ -175,9 +190,9 @@ private:
     /// @brief Closed loop stepper slew rate per interval (rad/s)
     static constexpr float _clSlewRate = 1.00f;
 
-    /// @brief Maximum angular velocity setpoint. NEMA8 maximum angular velocity ~100 rad/s. Anything above and risk
+    /// @brief Maximum angular velocity setpoint. NEMA8 maximum angular velocity ~150 rad/s. Anything above and risk
     /// stalling.
-    static constexpr float _maxRate = 100.0f / _gearRatio;
+    static constexpr float _maxRate = 150.0f / _gearRatio;
 
     /// @brief Encoder CLI streaming timer
     QP::QTimeEvt _encoderStreamTimer;
@@ -193,11 +208,26 @@ private:
     /// @brief Last encoder value
     uint16_t _lastEnc = 0u;
 
+    /// @brief Last absolute angular position value in counts
+    int _absLastPos = 0;
+
     /// @brief Position offset relative to home
     uint16_t _homeOffset = 0u;
 
     /// @brief Last encoder measured angular rate (rad/s)
     float _lastRate = 0.0f;
+
+    /// @brief Closed loop position setpoint (rad)
+    float _posSetpoint = 0.0f;
+
+    /// @brief Position PID controller
+    csys::PID _posPID;
+    /// @brief Position PID proportional gain
+    float _posKp = 5.0f;
+    /// @brief Position PID integral gain
+    float _posKi = 0.0f;
+    /// @brief Position PID derivative gain
+    float _posKd = 1.0f;
 
 private:
     /// @brief Private CLIAO signals
@@ -208,6 +238,7 @@ private:
         SET_MODE_SIG,
         SET_RATE_DIRECT_SIG,
         SET_RATE_SIG,
+        SET_POS_SIG,
         HOME_SIG,
         ENABLE_SIG,
         DISABLE_SIG,
@@ -220,12 +251,12 @@ private:
         MAX_PRIV_SIG
     };
 
-    /// @brief Set angular rate evt
-    class SetRateEvt : public QP::QEvt
+    /// @brief Setpoint modification evt
+    class SetpointEvt : public QP::QEvt
     {
     public:
-        SetRateEvt(QP::QSignal sig) : QP::QEvt(sig) {}
-        float omega;
+        SetpointEvt(QP::QSignal sig) : QP::QEvt(sig) {}
+        float setpoint;
     };
 
     /// @brief Mode control event
@@ -260,10 +291,12 @@ private:
     Q_STATE_DECL(initializing);
     /// @brief Active
     Q_STATE_DECL(active);
-    /// @brief Active Open Loop
+    /// @brief Active Open Loop Rate Control
     Q_STATE_DECL(active_ol);
-    /// @brief Active Closed Loop
+    /// @brief Active Closed Loop Rate Control
     Q_STATE_DECL(active_cl);
+    /// @brief Active Closed Loop Position Control
+    Q_STATE_DECL(active_cl_pos);
     /// @brief Fault
     Q_STATE_DECL(error);
 };  // class StepperAO
@@ -282,8 +315,8 @@ inline void StepperAO::SetRateSetpointDirect(float omega)
 {
     if (_isStarted)
     {
-        SetRateEvt* evt = Q_NEW(SetRateEvt, PrivateSignals::SET_RATE_DIRECT_SIG);
-        evt->omega = omega;
+        SetpointEvt* evt = Q_NEW(SetpointEvt, PrivateSignals::SET_RATE_DIRECT_SIG);
+        evt->setpoint = omega;
         POST(evt, this);
     }
 }
@@ -292,8 +325,18 @@ inline void StepperAO::SetRateSetpoint(float omega)
 {
     if (_isStarted)
     {
-        SetRateEvt* evt = Q_NEW(SetRateEvt, PrivateSignals::SET_RATE_SIG);
-        evt->omega = omega;
+        SetpointEvt* evt = Q_NEW(SetpointEvt, PrivateSignals::SET_RATE_SIG);
+        evt->setpoint = omega;
+        POST(evt, this);
+    }
+}
+
+inline void StepperAO::SetPositionSetpoint(float pos)
+{
+    if (_isStarted)
+    {
+        SetpointEvt* evt = Q_NEW(SetpointEvt, PrivateSignals::SET_POS_SIG);
+        evt->setpoint = pos;
         POST(evt, this);
     }
 }
