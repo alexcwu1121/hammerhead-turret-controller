@@ -8,6 +8,31 @@
 
 namespace stepper
 {
+/// @brief Standard nema 8 steps per revolution
+static constexpr uint16_t stepsPerRev = 200U;
+/// @brief Gearbox reduction ratio
+static constexpr float gearRatio = 10.0f;
+/// @brief Encoder counts per revolution
+static constexpr uint16_t encoderCPR = 4000U;
+/// @brief Pi
+static constexpr float pi = 3.14159265358979323846f;
+/// @brief Encoder counts to shaft angle in radians conversion factor
+static constexpr float counts2Rad = 2 * pi / (encoderCPR * gearRatio);
+/// @brief Degree to radian conversion factor
+static constexpr float deg2rad = pi / 180.0f;
+/// @brief Maximum angular velocity setpoint. NEMA8 maximum angular velocity ~150 rad/s. Anything above and risk
+/// stalling.
+static constexpr float maxRate = 150.0f / gearRatio;
+
+/// @brief Axis in NED frame
+enum Axis : uint8_t
+{
+    X = 0U,
+    Y,
+    Z,
+    NUM_AXES
+};
+
 /// @brief Fault codes
 enum Fault : uint8_t
 {
@@ -77,11 +102,26 @@ enum Mode : uint8_t
     NUM_MODES
 };
 
-/// @brief Stepper options struct
-struct StepperOpt
+/// @brief Option configurations
+struct Options
 {
-    /// @brief Offset of home position relative to homing trigger position in radians
-    float homeOffset;
+    /// @brief Closed loop rate control maximum slew rate (rad). Not time normalized.
+    float clSlewRate = 0.50f;
+    /// @brief Position PID proportional gain
+    float posKp = 5.0f;
+    /// @brief Position PID integral gain
+    float posKi = 0.0f;
+    /// @brief Position PID derivative gain
+    float posKd = 0.6f;
+    /// @brief Gear ratio external to stepper motor and 10:1 gearbox
+    float extGearRatio = 1.0f;
+    /// @brief Whether or not to invert stabilization direction
+    bool invertStabilization = false;
+    /// @brief Allow instantaneous stop of stepper motor when changing direction. Screws with position control, but can
+    /// make rate control snappier
+    bool instantStop = false;
+    /// @brief If IMU stabilization is enabled
+    bool imuStabilizationEnabled = true;
 };
 
 /// @brief Stepper AO
@@ -89,7 +129,7 @@ class StepperAO : public QP::QActive
 {
 public:
     /// @brief Constructor
-    StepperAO(a4988::A4988& stepperDriver, TIM_HandleTypeDef& htim, StepperOpt opt);
+    StepperAO(a4988::A4988& stepperDriver, TIM_HandleTypeDef& htim, Axis axis, Options options);
     StepperAO(const StepperAO&) = delete;
     StepperAO& operator=(const StepperAO&) = delete;
     StepperAO(StepperAO&&) = delete;
@@ -120,8 +160,20 @@ public:
     /// @brief Set a position setpoint (rad)
     inline void SetPositionSetpoint(float pos);
 
-    /// @brief Start homing sequence
-    inline void Home();
+    /// @brief Set rate control slew rate (rad)
+    inline void SetRateSlew(float slew);
+
+    /// @brief Set PID gains
+    inline void SetPIDGains(float kp, float ki, float kd);  // NOLINT
+
+    /// @brief Set absolute home position (rad)
+    inline void SetHome(float home);
+
+    /// @brief Enable IMU stabilization
+    inline void EnableStabilization();
+
+    /// @brief Disable IMU stabilization
+    inline void DisableStabilization();
 
     /// @brief Enable motor
     inline void Enable();
@@ -152,9 +204,9 @@ private:
     a4988::A4988& _stepperDriver;
     /// @brief Encoder timer handle
     TIM_HandleTypeDef& _encoderTim;
-    /// TODO: absorb a lot of constants below into stepper options as needed
-    /// @brief Stepper options
-    StepperOpt _opt;
+
+    /// @brief Axis of rotation in NED frame. Only matters if IMU stabilization is enabled.
+    Axis _axis;
 
     /// @brief Internal fault recovery timer
     QP::QTimeEvt _faultRecoveryTimer;
@@ -163,56 +215,49 @@ private:
     /// @brief Fault states
     bool _faultStates[stepper::Fault::NUM_FAULTS] = {false};
 
-    /// @brief Standard nema 8 steps per revolution
-    static constexpr uint16_t _stepsPerRev = 200U;
-    /// @brief Gearbox reduction ratio
-    static constexpr float _gearRatio = 10.0f;
-    /// @brief Encoder counts per revolution
-    static constexpr uint16_t _encoderCPR = 4000U;
-    /// @brief Encoder counts to shaft angle in radians conversion factor
-    static constexpr float _counts2Rad = 6.28f / (_encoderCPR * _gearRatio);
     /// @brief Rate IIR filter learning rate
     static constexpr float _iirAlpha = 1.0f;
 
     /// @brief Encoder polling timer
     QP::QTimeEvt _encoderPollTimer;
     /// @brief Encoder polling timer frequency in Hz
-    static constexpr uint32_t _encoderPollTimerFreq = 50U;
+    static constexpr uint32_t _encoderPollTimerFreq = 100U;
     /// @brief Encoder polling timer interval
     static constexpr uint32_t _encoderPollTimerInterval = bsp::TICKS_PER_SEC / _encoderPollTimerFreq;
 
     /// @brief Closed loop stepper control polling timer
     QP::QTimeEvt _clTimer;
     /// @brief Stepper closed loop control timer frequency in Hz
-    static constexpr uint32_t _clTimerFreq = 20U;
+    static constexpr uint32_t _clTimerFreq = 50U;
     /// @brief Stepper closed loop control update interval
     static constexpr uint32_t _clTimerInterval = bsp::TICKS_PER_SEC / _clTimerFreq;
-    /// @brief Closed loop stepper slew rate per interval (rad/s)
-    static constexpr float _clSlewRate = 1.00f;
-
-    /// @brief Maximum angular velocity setpoint. NEMA8 maximum angular velocity ~150 rad/s. Anything above and risk
-    /// stalling.
-    static constexpr float _maxRate = 150.0f / _gearRatio;
 
     /// @brief Encoder CLI streaming timer
     QP::QTimeEvt _encoderStreamTimer;
     /// @brief Encoder CLI streaming timer interval
     static constexpr uint32_t _encoderStreamTimerInterval = bsp::TICKS_PER_SEC / 5U;
 
-    /// @brief Tate setpoint (rad/s)
+    /// @brief Position PID controller
+    csys::PID _posPID;
+
+    /// @brief Stepper optional parameters
+    Options _options;
+
+private:  // NOLINT Dynamic internal states
+    /// @brief Rate setpoint (rad/s)
     float _rateSetpoint = 0.0f;
 
     /// @brief Closed loop controller command (rad/s)
     float _rateCommand = 0.0f;
 
-    /// @brief Last encoder value
+    /// @brief Last encoder value (counts)
     uint16_t _lastEnc = 0u;
 
-    /// @brief Last absolute angular position value in counts
-    int _absLastPos = 0;
+    /// @brief Last absolute angular position value (rad)
+    float _absLastPos = 0.0f;
 
-    /// @brief Position offset relative to home
-    uint16_t _homeOffset = 0u;
+    /// @brief Absolute home angular position value in (rad)
+    float _absHomePos = 0.0f;
 
     /// @brief Last encoder measured angular rate (rad/s)
     float _lastRate = 0.0f;
@@ -220,14 +265,8 @@ private:
     /// @brief Closed loop position setpoint (rad)
     float _posSetpoint = 0.0f;
 
-    /// @brief Position PID controller
-    csys::PID _posPID;
-    /// @brief Position PID proportional gain
-    float _posKp = 5.0f;
-    /// @brief Position PID integral gain
-    float _posKi = 0.0f;
-    /// @brief Position PID derivative gain
-    float _posKd = 1.0f;
+    /// @brief IMU integrated orientation (rad)
+    float _imuEstimatedPos = 0.0f;
 
 private:
     /// @brief Private CLIAO signals
@@ -239,7 +278,11 @@ private:
         SET_RATE_DIRECT_SIG,
         SET_RATE_SIG,
         SET_POS_SIG,
-        HOME_SIG,
+        SET_PID_GAINS_SIG,
+        SET_RATE_SLEW_SIG,
+        SET_HOME_SIG,
+        ENABLE_STABILIZATION_SIG,
+        DISABLE_STABILIZATION_SIG,
         ENABLE_SIG,
         DISABLE_SIG,
         RESET_SIG,
@@ -267,6 +310,16 @@ private:
         Mode mode;
     };
 
+    /// @brief PID gain set event
+    class SetPIDGainsEvt : public QP::QEvt
+    {
+    public:
+        SetPIDGainsEvt(QP::QSignal sig) : QP::QEvt(sig) {}
+        float kp;
+        float ki;
+        float kd;
+    };
+
     /// @brief Set and publish fault
     void SetFault(bsp::SubsystemID subsystem, uint8_t fault, bool active);
 
@@ -282,6 +335,10 @@ private:
     /// @param[in] omega angular velocity
     /// @return Fault
     Fault SetPWMFromRate(float omega);
+
+    /// @brief Get effective position after static home offset and IMU compensation
+    /// @return Fault
+    float GetEffectivePosition();
 
     /// @brief Initial state
     Q_STATE_DECL(initial);
@@ -341,11 +398,52 @@ inline void StepperAO::SetPositionSetpoint(float pos)
     }
 }
 
-inline void StepperAO::Home()
+inline void StepperAO::SetPIDGains(float kp, float ki, float kd)  // NOLINT
 {
     if (_isStarted)
     {
-        static QP::QEvt evt(PrivateSignals::HOME_SIG);
+        SetPIDGainsEvt* evt = Q_NEW(SetPIDGainsEvt, PrivateSignals::SET_PID_GAINS_SIG);
+        evt->kp = kp;
+        evt->ki = ki;
+        evt->kd = kd;
+        POST(evt, this);
+    }
+}
+
+inline void StepperAO::SetRateSlew(float slew)
+{
+    if (_isStarted)
+    {
+        SetpointEvt* evt = Q_NEW(SetpointEvt, PrivateSignals::SET_RATE_SLEW_SIG);
+        evt->setpoint = slew;
+        POST(evt, this);
+    }
+}
+
+inline void StepperAO::SetHome(float home)
+{
+    if (_isStarted)
+    {
+        SetpointEvt* evt = Q_NEW(SetpointEvt, PrivateSignals::SET_HOME_SIG);
+        evt->setpoint = home;
+        POST(evt, this);
+    }
+}
+
+inline void StepperAO::EnableStabilization()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::ENABLE_STABILIZATION_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void StepperAO::DisableStabilization()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::DISABLE_STABILIZATION_SIG);
         POST(&evt, this);
     }
 }

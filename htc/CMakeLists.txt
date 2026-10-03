@@ -35,6 +35,7 @@ target_sources(${CMAKE_PROJECT_NAME}
         imu/imu_ao.cpp
         stepper/a4988.cpp
         stepper/stepper_ao.cpp
+        stepper/tilt_home_ao.cpp
         control/control_ao.cpp
 )
 target_link_libraries(${CMAKE_PROJECT_NAME}

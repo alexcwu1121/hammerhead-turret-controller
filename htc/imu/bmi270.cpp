@@ -276,26 +276,38 @@ Fault BMI270::ReadData(IMUData& data)
 
 Fault BMI270::SetAccODR(AccODR odr)
 {
+    _accODR = odr;
     uint8_t acc_conf = ACC_CONF_REG(odr);
     return WriteRegisters(&acc_conf, Register::ACC_CONF, sizeof(acc_conf));
 }
 
 Fault BMI270::SetAccRange(AccRange range)
 {
+    _accRange = range;
     uint8_t acc_range = ACC_RANGE_REG(range);
     return WriteRegisters(&acc_range, Register::ACC_RANGE, sizeof(acc_range));
 }
 
 Fault BMI270::SetGyrODR(GyrODR odr)
 {
+    _gyrODR = odr;
     uint8_t gyr_conf = GYR_CONF_REG(odr);
     return WriteRegisters(&gyr_conf, Register::GYR_CONF, sizeof(gyr_conf));
 }
 
 Fault BMI270::SetGyrRange(GyrRange range)
 {
+    _gyrRange = range;
     uint8_t gyr_range = GYR_RANGE_REG(range);
-    return WriteRegisters(&gyr_range, Register::GYR_RANGE, sizeof(gyr_range));
+    auto fault = WriteRegisters(&gyr_range, Register::GYR_RANGE, sizeof(gyr_range));
+    if (fault != Fault::NO_FAULT) { return fault; }
+
+    // read back to verify
+    uint8_t written_gyro_range;
+    ReadRegisters(&written_gyro_range, Register::GYR_RANGE, sizeof(written_gyro_range));
+    if (written_gyro_range != gyr_range) { return Fault::CONFIG_SET_FAILED; }
+
+    return Fault::NO_FAULT;
 }
 
 Fault BMI270::RunCompensation()

@@ -49,6 +49,11 @@ public:
     /// @brief Reset IMU AO
     inline void Reset();
 
+    /// @brief Rate control timer frequency (Hz)
+    static constexpr uint32_t imuTimerFreq = 200U;
+    /// @brief Rate control timer period in ticks
+    static constexpr uint32_t imuTimerInterval = bsp::TICKS_PER_SEC / imuTimerFreq;
+
 private:
     /// @brief Subsystem ID
     bsp::SubsystemID _id;
@@ -62,12 +67,10 @@ private:
     imu::BMI270 _imu;
     /// @brief IMU service timer
     QP::QTimeEvt _imuTimer;
-    /// @brief Rate control timer period in ticks
-    uint32_t _imuTimerInterval = bsp::TICKS_PER_SEC / 200U;
     /// @brief IMU stream timer
     QP::QTimeEvt _imuStreamTimer;
     /// @brief IMU stream period
-    uint32_t _imuStreamTimerInterval = bsp::TICKS_PER_SEC / 10U;
+    static constexpr uint32_t _imuStreamTimerInterval = bsp::TICKS_PER_SEC / 10U;
     /// @brief Last IMU sample
     imu::IMUData _imuData = {0};
     /// @brief Internal fault recovery timer

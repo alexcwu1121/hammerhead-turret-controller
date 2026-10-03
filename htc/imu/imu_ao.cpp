@@ -91,7 +91,7 @@ Q_STATE_DEF(IMUAO, initializing)
             fault = _imu.SetGyrODR(imu::BMI270::GyrODR::ODR_1K6);
 
             // Set gyroscope range
-            fault = _imu.SetGyrRange(imu::BMI270::GyrRange::DPS_500);
+            fault = _imu.SetGyrRange(imu::BMI270::GyrRange::DPS_2000);
 
             // Initialize
             if (fault != imu::Fault::NO_FAULT)
@@ -133,7 +133,7 @@ Q_STATE_DEF(IMUAO, active)
         case Q_ENTRY_SIG:
         {
             // Arm imu polling timer
-            _imuTimer.armX(_imuTimerInterval, _imuTimerInterval);
+            _imuTimer.armX(imuTimerInterval, imuTimerInterval);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -164,7 +164,7 @@ Q_STATE_DEF(IMUAO, active)
             // Run compensation
             imu::Fault fault = _imu.RunCompensation();
             // Reenable IMU polling timer
-            _imuTimer.armX(_imuTimerInterval, _imuTimerInterval);
+            _imuTimer.armX(imuTimerInterval, imuTimerInterval);
 
             if (fault != imu::Fault::NO_FAULT)
             {

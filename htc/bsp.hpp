@@ -26,6 +26,8 @@ enum SubsystemID : uint8_t
     CLI_SUBSYSTEM = 0U,
     PAN_STEPPER_SUBSYSTEM,
     TILT_STEPPER_SUBSYSTEM,
+    PAN_HOME_SUBSYSTEM,
+    TILT_HOME_SUBSYSTEM,
     IMU_SUBSYSTEM,
     CONTROL_SUBSYSTEM,
     NUM_SUBSYSTEMS  // Keep this last
@@ -71,6 +73,8 @@ enum PublicSignals : QP::QSignal
     IMU_SIG = QP::Q_USER_SIG,
     FAULT_SIG,
     REQUEST_FAULT_SIG,
+    STEPPER_MODE_CHANGED_SIG,
+    STEPPER_ENC_STATE_SIG,
     MAX_PUB_SIG  // Keep this last
 };
 
@@ -87,6 +91,28 @@ public:
     uint8_t fault;
     /// @brief Fault active/inactive
     bool active;
+};
+
+/// @brief Stepper controller mode changed event
+class StepperModeChangedEvt : public QP::QEvt
+{
+public:
+    /// @brief Originating subsystem
+    SubsystemID id;
+    /// @brief Mode
+    uint8_t mode;
+};
+
+/// @brief Stepper encoder state event
+class StepperEncStateEvt : public QP::QEvt
+{
+public:
+    /// @brief Originating subsystem
+    SubsystemID id;
+    /// @brief Absolute position in rad
+    float absPos;
+    /// @brief Angular rate in rad/s
+    float rate;
 };
 
 }  // namespace bsp

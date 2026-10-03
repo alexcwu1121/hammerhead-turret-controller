@@ -7,6 +7,8 @@
 #include "imu_ao.hpp"
 #include "stepper_ao.hpp"
 #include "thirdparty/embedded_cli.h"
+#include "tilt_home_ao.hpp"
+//#include "pan_home_ao.hpp"
 
 void cli::onClear(EmbeddedCli* cli, char* args, void* context)
 {
@@ -137,6 +139,34 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
                     handled = true;
                 }
             }
+            else if (strcmp(cmd_str, "home") == 0)
+            {
+                if (strcmp(opt_str, "pan") == 0 || strcmp(opt_str, "all") == 0)
+                {
+                    // stepper::PanHomeAO::Inst().Home();
+                    handled = true;
+                }
+
+                if (strcmp(opt_str, "tilt") == 0 || strcmp(opt_str, "all") == 0)
+                {
+                    stepper::TiltHomeAO::Inst().Home();
+                    handled = true;
+                }
+            }
+            else if (strcmp(cmd_str, "aborthome") == 0)
+            {
+                if (strcmp(opt_str, "pan") == 0 || strcmp(opt_str, "all") == 0)
+                {
+                    // stepper::PanHomeAO::Inst().Abort();
+                    handled = true;
+                }
+
+                if (strcmp(opt_str, "tilt") == 0 || strcmp(opt_str, "all") == 0)
+                {
+                    stepper::TiltHomeAO::Inst().Abort();
+                    handled = true;
+                }
+            }
             break;
         }
         case 3U:
@@ -238,7 +268,9 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
             "\tturret setrate [all|pan|tilt] [rate (rad/s)]\n\r"
             "\tturret setpos [all|pan|tilt] [pos (rad)]\n\r"
             "\tturret disable [all|pan|tilt]\n\r"
-            "\tturret enable [all|pan|tilt]\n\r");
+            "\tturret enable [all|pan|tilt]\n\r"
+            "\tturret home [all|pan|tilt]\n\r"
+            "\tturret aborthome [all|pan|tilt]\n\r");
     }
 }
 

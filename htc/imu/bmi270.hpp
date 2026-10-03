@@ -15,6 +15,7 @@ enum Fault : uint8_t
     INVALID_ID,
     INVALID_SIZE,
     INIT_FAILED,
+    CONFIG_SET_FAILED,
     NUM_FAULTS
 };
 

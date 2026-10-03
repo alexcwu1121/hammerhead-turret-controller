@@ -1,11 +1,13 @@
 #include "stepper_ao.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 
 #include "bsp.hpp"
 #include "cli_ao.hpp"
 #include "gpio.h"
+#include "imu_ao.hpp"
 #include "qpcpp.hpp"
 #include "tim.h"
 
@@ -45,26 +47,29 @@ static a4988::A4988 tiltDriver = a4988::A4988Peripherals {.stepPinPort = *PAN_ST
                                                           .htim = htim1,
                                                           .htimCh = TIM_CHANNEL_1};
 
-StepperAO::StepperAO(a4988::A4988& stepperDriver, TIM_HandleTypeDef& htim, StepperOpt opt) :
+StepperAO::StepperAO(a4988::A4988& stepperDriver, TIM_HandleTypeDef& htim, Axis axis, Options options) :
     QP::QActive(&initial),
     _stepperDriver(stepperDriver),
     _encoderTim(htim),
-    _opt(opt),
+    _axis(axis),
     _faultRecoveryTimer(this, PrivateSignals::RESET_SIG, 0U),
     _encoderPollTimer(this, PrivateSignals::POLL_ENCODER_SIG, 0U),
     _clTimer(this, PrivateSignals::CL_UPDATE_SIG, 0U),
-    _encoderStreamTimer(this, PrivateSignals::ENCODER_STREAM_SIG, 0U)
+    _encoderStreamTimer(this, PrivateSignals::ENCODER_STREAM_SIG, 0U),
+    _options(options)
 {}
 
 StepperAO& StepperAO::PanInst()
 {
-    static StepperAO inst(panDriver, htim2, {.homeOffset = 0.0f});
+    static StepperAO inst(
+        panDriver, htim2, Axis::Z,
+        {.posKp = 15.0f, .posKi = 0.0f, .posKd = 1.8f, .extGearRatio = 2.9888888f, .invertStabilization = true});
     return inst;
 }
 
 StepperAO& StepperAO::TiltInst()
 {
-    static StepperAO inst(tiltDriver, htim3, {.homeOffset = 0.0f});
+    static StepperAO inst(tiltDriver, htim3, Axis::Y, {.posKp = 5.0f, .posKi = 0.0f, .posKd = 0.6f});
     return inst;
 }
 
@@ -96,7 +101,7 @@ void StepperAO::SetFault(bsp::SubsystemID id, uint8_t fault, bool active)
 void StepperAO::GetFreqResolutionForRate(float omega, float& freq, a4988::StepResolution& resolution)
 {
     // compute full step frequency based on stepper resolution
-    freq = _gearRatio * std::abs(omega) * _stepsPerRev / 6.28;
+    freq = gearRatio * std::abs(omega) * stepsPerRev / (2 * pi);
 
     /// TODO: For now, only use eighth microstepping
     resolution = a4988::StepResolution::EIGHTH;
@@ -126,9 +131,21 @@ Fault StepperAO::SetPWMFromRate(float omega)
     return Fault::NO_FAULT;
 }
 
+float StepperAO::GetEffectivePosition()
+{
+    float eff_pos = _absLastPos - _absHomePos;
+    if (_options.imuStabilizationEnabled)
+    {
+        if (_options.invertStabilization) { eff_pos += _imuEstimatedPos; }
+        else { eff_pos -= _imuEstimatedPos; }
+    }
+    return eff_pos;
+}
+
 Q_STATE_DEF(StepperAO, initial)
 {
     Q_UNUSED_PAR(e);
+    subscribe(bsp::PublicSignals::IMU_SIG);
     return tran(&initializing);
 }
 
@@ -152,6 +169,77 @@ Q_STATE_DEF(StepperAO, root)
             auto fault = _stepperDriver.Disable();
             if (fault != a4988::Fault::NO_FAULT) { SetFault(_id, Fault::STEPPER_DISABLE_FAILED, true); }
 
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::SET_HOME_SIG:
+        {
+            // Set home position
+            _absHomePos = Q_EVT_CAST(SetpointEvt)->setpoint;
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::ENABLE_STABILIZATION_SIG:
+        {
+            _options.imuStabilizationEnabled = true;
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::DISABLE_STABILIZATION_SIG:
+        {
+            _options.imuStabilizationEnabled = false;
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case bsp::PublicSignals::IMU_SIG:
+        {
+            // perform axis mapping from imu to NED vehicle frame
+            // Gyro X -> Vehicle Y
+            // Gyro Y -> Vehicle Z
+            // Gyro Z -> Vehicle X
+            float imu_rate;
+            switch (_axis)
+            {
+                case Axis::X:
+                {
+                    imu_rate = Q_EVT_CAST(imu::IMUEvt)->data.gyr[2] * deg2rad;
+                    break;
+                }
+                case Axis::Y:
+                {
+                    imu_rate = Q_EVT_CAST(imu::IMUEvt)->data.gyr[0] * deg2rad;
+                    break;
+                }
+                case Axis::Z:
+                {
+                    imu_rate = Q_EVT_CAST(imu::IMUEvt)->data.gyr[1] * deg2rad;
+                    break;
+                }
+                default:
+                {
+                    imu_rate = 0.0f;
+                    break;
+                }
+            }
+
+            // integrate imu rate to estimate position
+            _imuEstimatedPos += imu_rate * (1.0f / static_cast<float>(imu::IMUAO::imuTimerFreq));
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::SET_PID_GAINS_SIG:
+        {
+            _options.posKp = Q_EVT_CAST(SetPIDGainsEvt)->kp;
+            _options.posKi = Q_EVT_CAST(SetPIDGainsEvt)->ki;
+            _options.posKd = Q_EVT_CAST(SetPIDGainsEvt)->kd;
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::SET_RATE_SLEW_SIG:
+        {
+            _options.clSlewRate = Q_EVT_CAST(SetpointEvt)->setpoint;
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -234,7 +322,7 @@ Q_STATE_DEF(StepperAO, active)
             _lastEnc = __HAL_TIM_GET_COUNTER(&_encoderTim);
 
             // also set initial absolute encoder position
-            _absLastPos = _lastEnc;
+            _absLastPos = static_cast<float>(_lastEnc) * counts2Rad / _options.extGearRatio;
 
             status_ = Q_RET_HANDLED;
             break;
@@ -288,14 +376,21 @@ Q_STATE_DEF(StepperAO, active)
             int16_t enc_delta = static_cast<int16_t>(enc - _lastEnc);
 
             // convert to rad/s and iir filter
-            float obs = static_cast<float>(_encoderPollTimerFreq) * enc_delta * _counts2Rad;
+            float obs = static_cast<float>(_encoderPollTimerFreq) * enc_delta * counts2Rad / _options.extGearRatio;
             _lastRate += _iirAlpha * (obs - _lastRate);
 
             // update last encoder value
             _lastEnc = enc;
 
-            // also compute absolute angle relative to home out of convenience
-            _absLastPos = _absLastPos + enc_delta;
+            // also compute absolute angle
+            _absLastPos += static_cast<float>(enc_delta) * counts2Rad / _options.extGearRatio;
+
+            // publish encoder state
+            bsp::StepperEncStateEvt* evt = Q_NEW(bsp::StepperEncStateEvt, bsp::PublicSignals::STEPPER_ENC_STATE_SIG);
+            evt->id = _id;
+            evt->absPos = _absLastPos;
+            evt->rate = _lastRate;
+            PUBLISH(evt, this);
 
             status_ = Q_RET_HANDLED;
             break;
@@ -320,8 +415,9 @@ Q_STATE_DEF(StepperAO, active)
                 "%s\n\r"
                 "Encoder Rate: %+7.4f rad/s\n\r"
                 "Encoder Pos:  %+7.4f rad\n\r"
+                "IMU Est Pos:  %+7.4f rad\n\r"
                 ">>>>>>>>>>>>>>\n\r",
-                bsp::SubsystemIDToStr(_id), _lastRate, static_cast<float>(_absLastPos - _homeOffset) * _counts2Rad);
+                bsp::SubsystemIDToStr(_id), _lastRate, _absLastPos, _imuEstimatedPos);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -341,6 +437,13 @@ Q_STATE_DEF(StepperAO, active_ol)
     {
         case Q_ENTRY_SIG:
         {
+            // notify of mode change
+            bsp::StepperModeChangedEvt* evt =
+                Q_NEW(bsp::StepperModeChangedEvt, bsp::PublicSignals::STEPPER_MODE_CHANGED_SIG);
+            evt->id = _id;
+            evt->mode = Mode::OPEN_LOOP;
+            PUBLISH(evt, this);
+
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -352,7 +455,7 @@ Q_STATE_DEF(StepperAO, active_ol)
         case PrivateSignals::SET_RATE_DIRECT_SIG:
         {
             // Set PWM waveform
-            float omega = std::clamp(Q_EVT_CAST(SetpointEvt)->setpoint, -_maxRate, _maxRate);
+            float omega = std::clamp(Q_EVT_CAST(SetpointEvt)->setpoint, -maxRate, maxRate);
             Fault fault = SetPWMFromRate(omega);
 
             if (fault != NO_FAULT)
@@ -395,6 +498,13 @@ Q_STATE_DEF(StepperAO, active_cl)
             // this assumes open loop angular velocity commands are close to reality, which is pretty much true
             _rateCommand = _lastRate;
 
+            // notify of mode change
+            bsp::StepperModeChangedEvt* evt =
+                Q_NEW(bsp::StepperModeChangedEvt, bsp::PublicSignals::STEPPER_MODE_CHANGED_SIG);
+            evt->id = _id;
+            evt->mode = Mode::CLOSED_LOOP;
+            PUBLISH(evt, this);
+
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -406,14 +516,22 @@ Q_STATE_DEF(StepperAO, active_cl)
         }
         case PrivateSignals::SET_RATE_SIG:
         {
-            _rateSetpoint = std::clamp(Q_EVT_CAST(SetpointEvt)->setpoint, -_maxRate, _maxRate);
+            _rateSetpoint = std::clamp(Q_EVT_CAST(SetpointEvt)->setpoint, -maxRate, maxRate);
             status_ = Q_RET_HANDLED;
             break;
         }
         case PrivateSignals::CL_UPDATE_SIG:
         {
             float rate_error = _rateSetpoint - _lastRate;
-            float correction_mag = std::min(std::abs(rate_error), _clSlewRate);
+            float correction_mag = std::min(std::abs(rate_error), _options.clSlewRate);
+
+            // sometimes, the motor will stall against an elastic surface and kick back in the opposite direction.
+            // in that event, if we set rate command to last rate, then the motor will travel in the opposite direction
+            // and have to reverse thus, if the current observed rate is opposite the desired rate, we will immediately
+            // zero the rate command
+            if (_options.instantStop && std::signbit(rate_error) != std::signbit(_lastRate)) { _rateCommand = 0.0f; }
+            else { _rateCommand = _lastRate; }
+
             if (rate_error > 0) { _rateCommand += correction_mag; }
             else if (rate_error < 0) { _rateCommand -= correction_mag; }
 
@@ -452,32 +570,39 @@ Q_STATE_DEF(StepperAO, active_cl_pos)
             // use the same update timer as rate control
             /// TODO: if we need rate decoupling, consider adding another timer
 
-            // Initialize position setpoint to current position
-            _posSetpoint = _absLastPos * _counts2Rad;
+            // Initialize position setpoint to current effective position
+            _posSetpoint = GetEffectivePosition();
 
             // refresh pid gains
-            _posPID.SetGains(_posKp, _posKi, _posKd);
+            _posPID.SetGains(_options.posKp, _options.posKi, _options.posKd);
 
             // reset PID controller state
             _posPID.Reset();
+
+            // notify of mode change
+            bsp::StepperModeChangedEvt* evt =
+                Q_NEW(bsp::StepperModeChangedEvt, bsp::PublicSignals::STEPPER_MODE_CHANGED_SIG);
+            evt->id = _id;
+            evt->mode = Mode::CLOSED_LOOP_POS;
+            PUBLISH(evt, this);
 
             status_ = Q_RET_HANDLED;
             break;
         }
         case PrivateSignals::SET_POS_SIG:
         {
-            _posSetpoint = Q_EVT_CAST(SetpointEvt)->setpoint;
+            _posSetpoint = Q_EVT_CAST(SetpointEvt)->setpoint - _absHomePos;
             status_ = Q_RET_HANDLED;
             break;
         }
         case PrivateSignals::CL_UPDATE_SIG:
         {
             // Position control loop update
-            _rateSetpoint = _posPID.Update(_posSetpoint, (_absLastPos - _homeOffset) * _counts2Rad,
-                                           1.0f / static_cast<float>(_clTimerFreq));
+            _rateSetpoint =
+                _posPID.Update(_posSetpoint, GetEffectivePosition(), 1.0f / static_cast<float>(_clTimerFreq));
 
             // Saturate rate setpoint
-            _rateSetpoint = std::clamp(_rateSetpoint, -_maxRate, _maxRate);
+            _rateSetpoint = std::clamp(_rateSetpoint, -maxRate, maxRate);
 
             // Mark as unhandled so this event propagates up a level to the rate control loop
             status_ = Q_RET_UNHANDLED;

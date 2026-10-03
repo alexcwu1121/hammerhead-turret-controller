@@ -10,11 +10,12 @@
 #include "imu_ao.hpp"
 #include "stepper_ao.hpp"
 #include "thirdparty/printf.h"
+#include "tilt_home_ao.hpp"
 
 /// @brief Published CAN ID lowest index
 static constexpr uint16_t PubCANIDIdx = 0x300;
 
-/// @brief Published CAN message IDs
+/// @brief Published CAN message IDs>
 enum PubCANID : uint16_t
 {
     PUB_IMU_DATA_ACC_XY = PubCANIDIdx,
@@ -31,10 +32,22 @@ enum SubCANID : uint16_t
 {
     SUB_HOME_PAN = SubCANIDIdx,
     SUB_HOME_TILT,
+    SUB_ABORT_HOME_PAN,
+    SUB_ABORT_HOME_TILT,
+    SUB_SET_MODE_PAN,
+    SUB_SET_MODE_TILT,
     SUB_SET_RATE_PAN,
     SUB_SET_RATE_TILT,
     SUB_SET_POS_PAN,
     SUB_SET_POS_TILT,
+    SUB_PID_GAINS_PAN,
+    SUB_RATE_SLEW_PAN,
+    SUB_PID_GAINS_TILT,
+    SUB_RATE_SLEW_TILT,
+    SUB_ENABLE_TILT_STABILIZATION,
+    SUB_ENABLE_PAN_STABILIZATION,
+    SUB_DISABLE_TILT_STABILIZATION,
+    SUB_DISABLE_PAN_STABILIZATION,
     SUB_WRITE_IMU_RESET,
     SUB_WRITE_IMU_COMP,
     MAX_SUB_ID
@@ -56,6 +69,50 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
             // Inject events
             switch (header.StdId)
             {
+                /*
+                case SubCANID::SUB_HOME_PAN:
+                {
+                    stepper::StepperAO::PanInst().Home();
+                    break;
+                }
+                */
+                case SubCANID::SUB_HOME_TILT:
+                {
+                    stepper::TiltHomeAO::Inst().Home();
+                    break;
+                }
+                /*
+                case SubCANID::SUB_ABORT_HOME_PAN:
+                {
+                    stepper::StepperAO::PanInst().AbortHome();
+                    break;
+                }
+                */
+                case SubCANID::SUB_ABORT_HOME_TILT:
+                {
+                    stepper::TiltHomeAO::Inst().Abort();
+                    break;
+                }
+                case SubCANID::SUB_SET_MODE_PAN:
+                {
+                    if (header.DLC == 1)
+                    {
+                        uint8_t mode = 0;
+                        memcpy(&mode, data, sizeof(uint8_t));
+                        stepper::StepperAO::PanInst().SetMode(static_cast<stepper::Mode>(mode));
+                    }
+                    break;
+                }
+                case SubCANID::SUB_SET_MODE_TILT:
+                {
+                    if (header.DLC == 1)
+                    {
+                        uint8_t mode = 0;
+                        memcpy(&mode, data, sizeof(uint8_t));
+                        stepper::StepperAO::TiltInst().SetMode(static_cast<stepper::Mode>(mode));
+                    }
+                    break;
+                }
                 case SubCANID::SUB_SET_RATE_PAN:
                 {
                     if (header.DLC == 4)
@@ -74,6 +131,96 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
                         memcpy(&rate, data, sizeof(float));
                         stepper::StepperAO::TiltInst().SetRateSetpoint(rate);
                     }
+                    break;
+                }
+                case SubCANID::SUB_SET_POS_PAN:
+                {
+                    if (header.DLC == 4)
+                    {
+                        float rate = 0.0f;
+                        memcpy(&rate, data, sizeof(float));
+                        stepper::StepperAO::PanInst().SetPositionSetpoint(rate);
+                    }
+                    break;
+                }
+                case SubCANID::SUB_SET_POS_TILT:
+                {
+                    if (header.DLC == 4)
+                    {
+                        float rate = 0.0f;
+                        memcpy(&rate, data, sizeof(float));
+                        stepper::StepperAO::TiltInst().SetPositionSetpoint(rate);
+                    }
+                    break;
+                }
+                case SubCANID::SUB_PID_GAINS_PAN:
+                {
+                    if (header.DLC == 6)
+                    {
+                        uint16_t kp_u;
+                        uint16_t ki_u;
+                        uint16_t kd_u;
+                        memcpy(&kp_u, data, sizeof(uint16_t));
+                        memcpy(&ki_u, data + 2, sizeof(uint16_t));
+                        memcpy(&kd_u, data + 4, sizeof(uint16_t));
+                        stepper::StepperAO::PanInst().SetPIDGains(static_cast<float>(kp_u), static_cast<float>(ki_u),
+                                                                  static_cast<float>(kd_u));
+                    }
+                    break;
+                }
+                case SubCANID::SUB_RATE_SLEW_PAN:
+                {
+                    if (header.DLC == 4)
+                    {
+                        float slew = 0.0f;
+                        memcpy(&slew, data, sizeof(float));
+                        stepper::StepperAO::TiltInst().SetRateSlew(slew);
+                    }
+                    break;
+                }
+                case SubCANID::SUB_PID_GAINS_TILT:
+                {
+                    if (header.DLC == 6)
+                    {
+                        uint16_t kp_u;
+                        uint16_t ki_u;
+                        uint16_t kd_u;
+                        memcpy(&kp_u, data, sizeof(uint16_t));
+                        memcpy(&ki_u, data + 2, sizeof(uint16_t));
+                        memcpy(&kd_u, data + 4, sizeof(uint16_t));
+                        stepper::StepperAO::TiltInst().SetPIDGains(static_cast<float>(kp_u), static_cast<float>(ki_u),
+                                                                   static_cast<float>(kd_u));
+                    }
+                    break;
+                }
+                case SubCANID::SUB_RATE_SLEW_TILT:
+                {
+                    if (header.DLC == 4)
+                    {
+                        float slew = 0.0f;
+                        memcpy(&slew, data, sizeof(float));
+                        stepper::StepperAO::TiltInst().SetRateSlew(slew);
+                    }
+                    break;
+                }
+                case SubCANID::SUB_ENABLE_PAN_STABILIZATION:
+                {
+                    stepper::StepperAO::PanInst().EnableStabilization();
+                    break;
+                }
+                case SubCANID::SUB_ENABLE_TILT_STABILIZATION:
+                {
+                    stepper::StepperAO::TiltInst().EnableStabilization();
+                    break;
+                }
+                case SubCANID::SUB_DISABLE_PAN_STABILIZATION:
+                {
+                    stepper::StepperAO::PanInst().DisableStabilization();
+                    break;
+                }
+                case SubCANID::SUB_DISABLE_TILT_STABILIZATION:
+                {
+                    stepper::StepperAO::TiltInst().DisableStabilization();
                     break;
                 }
                 case SubCANID::SUB_WRITE_IMU_RESET:
