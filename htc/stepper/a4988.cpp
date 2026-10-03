@@ -16,8 +16,7 @@ Fault A4988::Init() const
     fault = SetResolution(StepResolution::FULL);
     if (fault != Fault::NO_FAULT) { return fault; }
 
-    // This driver assumes minimum step frequency of 1 Hz before it rounds down to zero
-    // Set clock prescaler
+    // Set clock prescaler according to minimum step frequency
     __HAL_TIM_SET_PRESCALER(&_periph.htim, _periph.pwmClockFrequency / (_minimumStepFrequency * UINT16_MAX));
 
     // Initialize step frequency to 0
@@ -117,7 +116,11 @@ Fault A4988::SetFrequency(float freq) const
     uint32_t arr = _periph.pwmClockFrequency / (freq * _periph.htim.Instance->PSC);
 
     /// TODO: we can actually adjust the prescaler dynamically here instead of erroring
-    if (arr > UINT16_MAX) { return Fault::FREQ_TOO_HIGH; }
+    if (arr > UINT16_MAX)
+    {
+        volatile float test = 0;
+        return Fault::FREQ_TOO_LOW;  // NOLINT
+    }
 
     // Set new autoreload
     __HAL_TIM_SET_AUTORELOAD(&_periph.htim, arr);

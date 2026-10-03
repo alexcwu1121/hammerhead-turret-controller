@@ -15,7 +15,7 @@ enum Fault : uint8_t
     INVALID_RESOLUTION,
     INVALID_DIR,
     INVALID_FREQ,
-    FREQ_TOO_HIGH,
+    FREQ_TOO_LOW,
     HAL_FAULT,
     NUM_FAULTS
 };
@@ -124,7 +124,7 @@ public:
 
 private:
     /// @brief Minimum step frequency before round down to zero (Hz)
-    static constexpr uint32_t _minimumStepFrequency {10u};
+    static constexpr uint32_t _minimumStepFrequency {2u};
 
     /// @brief A4988 peripheral assignments
     A4988Peripherals _periph;

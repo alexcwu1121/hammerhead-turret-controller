@@ -54,6 +54,10 @@ constexpr const char* FaultToStr(Fault fault)
         {
             return "INIT_FAILED";
         }
+        case Fault::CONFIG_SET_FAILED:
+        {
+            return "CONFIG_SET_FAILED";
+        }
         default:
         {
             return "";

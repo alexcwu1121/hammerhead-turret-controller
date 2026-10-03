@@ -125,8 +125,9 @@ Fault StepperAO::SetPWMFromRate(float omega)
     fault = _stepperDriver.SetResolution(resolution);
     if (fault != a4988::Fault::NO_FAULT) { return Fault::SET_RES_FAILED; }
 
+    // frequency-too-low faults acceptable here. you can only set the clock period so high.
     fault = _stepperDriver.SetFrequency(freq);
-    if (fault != a4988::Fault::NO_FAULT) { return Fault::SET_FREQ_FAILED; }
+    if (fault != a4988::Fault::NO_FAULT && fault != a4988::Fault::FREQ_TOO_LOW) { return Fault::SET_FREQ_FAILED; }
 
     return Fault::NO_FAULT;
 }
