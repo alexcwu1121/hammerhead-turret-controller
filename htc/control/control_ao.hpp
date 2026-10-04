@@ -11,6 +11,7 @@ enum Fault : uint8_t
     NO_FAULT = 0U,
     CONTROL_INIT_FAILED,
     CONTROL_CAN_TX_FAILED,
+    WATCHDOG_FAULT,
     NUM_FAULTS
 };
 
@@ -32,6 +33,10 @@ constexpr const char* FaultToStr(Fault fault)
         case Fault::CONTROL_CAN_TX_FAILED:
         {
             return "CONTROL_CAN_TX_FAILED";
+        }
+        case Fault::WATCHDOG_FAULT:
+        {
+            return "WATCHDOG_FAULT";
         }
         default:
         {
@@ -71,6 +76,15 @@ public:
     /// @brief Print system fault state
     inline void PrintFault();
 
+    /// @brief Poke watchdog
+    inline void PokeWatchdog();
+
+    /// @brief Enable watchdog
+    inline void EnableWatchdog();
+
+    /// @brief Disable watchdog
+    inline void DisableWatchdog();
+
 private:
     /// @brief Subsystem ID
     bsp::SubsystemID _id;
@@ -99,6 +113,22 @@ private:
     /// @brief CAN TX mailbox
     uint32_t _canTxMailbox;
 
+    /// @brief Heartbeat CAN publish timer
+    QP::QTimeEvt _heartbeatTimer;
+    /// @brief Heartbeat CAN publish timer period
+    static constexpr uint32_t _heartbeatTimerInterval = bsp::TICKS_PER_SEC / 5U;
+
+    /// @brief Watchdog timer
+    QP::QTimeEvt _watchdogTimer;
+    /// @brief Watchdog timer period
+    static constexpr uint32_t _watchdogTimerInterval = bsp::TICKS_PER_SEC / 1U;
+    /// @brief Whether or not watchdog is enabled
+    bool _watchdogEnable = false;
+
+    /// @brief Track if this AO has successfully initialized once. Certain steps in initialization should be skipped
+    /// after first time.
+    bool _hasFirstTimeInit = false;
+
 private:  // NOLINT
     /// @brief Private CLIAO signals
     enum PrivateSignals : QP::QSignal
@@ -108,6 +138,11 @@ private:  // NOLINT
         RESET_SIG,
         SUBS_FAULT_REQUEST_SIG,
         PRINT_FAULT_SIG,
+        HEARTBEAT_SIG,
+        POKE_WATCHDOG_SIG,
+        WATCHDOG_EXPIRED_SIG,
+        ENABLE_WATCHDOG_SIG,
+        DISABLE_WATCHDOG_SIG,
         MAX_PRIV_SIG
     };
 
@@ -124,6 +159,8 @@ private:  // NOLINT
     Q_STATE_DECL(active);
     /// @brief Fault
     Q_STATE_DECL(error);
+    /// @brief Protect the platform. Entered when watchdog expires.
+    Q_STATE_DECL(selfprotect);
 };  // class ControlAO
 
 inline void ControlAO::Reset()
@@ -140,6 +177,33 @@ inline void ControlAO::PrintFault()
     if (_isStarted)
     {
         static QP::QEvt evt(PrivateSignals::PRINT_FAULT_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void ControlAO::PokeWatchdog()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::POKE_WATCHDOG_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void ControlAO::EnableWatchdog()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::ENABLE_WATCHDOG_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void ControlAO::DisableWatchdog()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::DISABLE_WATCHDOG_SIG);
         POST(&evt, this);
     }
 }

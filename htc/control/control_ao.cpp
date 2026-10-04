@@ -21,6 +21,8 @@ enum PubCANID : uint16_t
     PUB_IMU_DATA_ACC_XY = PubCANIDIdx,
     PUB_IMU_DATA_ACC_Z_GYR_X,
     PUB_IMU_DATA_GYR_Y_GYR_Z,
+    PUB_HEARTBEAT,
+    PUB_FAULT_INDEX = 0x320,  // starting index for faults
     MAX_PUB_ID
 };
 
@@ -50,6 +52,9 @@ enum SubCANID : uint16_t
     SUB_DISABLE_PAN_STABILIZATION,
     SUB_WRITE_IMU_RESET,
     SUB_WRITE_IMU_COMP,
+    SUB_POKE_WATCHDOG,
+    SUB_ENABLE_WATCHDOG,
+    SUB_DISABLE_WATCHDOG,
     MAX_SUB_ID
 };
 
@@ -233,6 +238,21 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
                     imu::IMUAO::Inst().RunIMUCompensation();
                     break;
                 }
+                case SubCANID::SUB_POKE_WATCHDOG:
+                {
+                    control::ControlAO::Inst().PokeWatchdog();
+                    break;
+                }
+                case SubCANID::SUB_ENABLE_WATCHDOG:
+                {
+                    control::ControlAO::Inst().EnableWatchdog();
+                    break;
+                }
+                case SubCANID::SUB_DISABLE_WATCHDOG:
+                {
+                    control::ControlAO::Inst().DisableWatchdog();
+                    break;
+                }
                 default:
                 {
                     break;
@@ -247,7 +267,9 @@ namespace control
 ControlAO::ControlAO() :
     QP::QActive(&initial),
     _faultRecoveryTimer(this, PrivateSignals::RESET_SIG, 0U),
-    _faultRequestTimer(this, PrivateSignals::SUBS_FAULT_REQUEST_SIG, 0U)
+    _faultRequestTimer(this, PrivateSignals::SUBS_FAULT_REQUEST_SIG, 0U),
+    _heartbeatTimer(this, PrivateSignals::HEARTBEAT_SIG, 0U),
+    _watchdogTimer(this, PrivateSignals::WATCHDOG_EXPIRED_SIG, 0U)
 {}
 
 void ControlAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
@@ -407,12 +429,7 @@ Q_STATE_DEF(ControlAO, root)
         }
         case bsp::PublicSignals::IMU_SIG:
         {
-            _canTxHeader.ExtId = 0x00;
-            _canTxHeader.IDE = CAN_ID_STD;
-            _canTxHeader.RTR = CAN_RTR_DATA;
             _canTxHeader.DLC = 8;
-            _canTxHeader.TransmitGlobalTime = DISABLE;
-
             // Fragment IMU data into 8 byte chunks and send
 
             // Accelerometer x and y
@@ -454,6 +471,52 @@ Q_STATE_DEF(ControlAO, root)
             status_ = Q_RET_HANDLED;
             break;
         }
+        case PrivateSignals::HEARTBEAT_SIG:
+        {
+            _canTxHeader.DLC = 0;
+            _canTxHeader.StdId = PubCANID::PUB_HEARTBEAT;
+            if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
+            {
+                SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_CAN_TX_FAILED, true);
+            }
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::POKE_WATCHDOG_SIG:
+        {
+            // rearm the watchdog timer
+            _watchdogTimer.rearm(_watchdogTimerInterval);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::WATCHDOG_EXPIRED_SIG:
+        {
+            SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::WATCHDOG_FAULT, true);
+            status_ = tran(&selfprotect);
+            break;
+        }
+        case PrivateSignals::ENABLE_WATCHDOG_SIG:
+        {
+            // enable and rearm watchdog
+            /// TODO: you could hack this and use this like a poke... probably not a problem?
+            _watchdogEnable = true;
+            _watchdogTimer.rearm(_watchdogTimerInterval);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::DISABLE_WATCHDOG_SIG:
+        {
+            // disable watchdog timer
+            _watchdogEnable = false;
+            _watchdogTimer.disarm();
+
+            // clear fault if applicable (should never be)
+            SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::WATCHDOG_FAULT, false);
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default:
         {
             status_ = super(&top);
@@ -482,6 +545,12 @@ Q_STATE_DEF(ControlAO, initializing)
             can_filter.FilterFIFOAssignment = CAN_RX_FIFO0;
             can_filter.FilterActivation = ENABLE;
 
+            // Initialize can tx header
+            _canTxHeader.ExtId = 0x00;
+            _canTxHeader.IDE = CAN_ID_STD;
+            _canTxHeader.RTR = CAN_RTR_DATA;
+            _canTxHeader.TransmitGlobalTime = DISABLE;
+
             if (HAL_CAN_ConfigFilter(&hcan, &can_filter) != HAL_OK)
             {
                 ControlAO::SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_INIT_FAILED, true);
@@ -492,9 +561,13 @@ Q_STATE_DEF(ControlAO, initializing)
             // Start CAN peripheral
             if (HAL_CAN_Start(&hcan) != HAL_OK)
             {
-                ControlAO::SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_INIT_FAILED, true);
-                status_ = tran(&error);
-                break;
+                // error code should be HAL_CAN_ERROR_NOT_READY if CAN is already started
+                if (hcan.ErrorCode != HAL_CAN_ERROR_NOT_READY)
+                {
+                    ControlAO::SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_INIT_FAILED, true);
+                    status_ = tran(&error);
+                    break;
+                }
             }
 
             // Enable recieve interrupt
@@ -505,7 +578,17 @@ Q_STATE_DEF(ControlAO, initializing)
                 break;
             }
 
+            if (!_hasFirstTimeInit)
+            {
+                // Arm subsystem fault heartbeat timer
+                _faultRequestTimer.armX(_faultRequestTimerInterval, _faultRequestTimerInterval);
+            }
+
+            // Arm watchdog timer
+            if (_watchdogEnable) { _watchdogTimer.armX(_watchdogTimerInterval, 0U); }
+
             // Finish initialization
+            _hasFirstTimeInit = true;
             static QP::QEvt evt(PrivateSignals::INITIALIZED_SIG);
             POST(&evt, this);
 
@@ -531,19 +614,6 @@ Q_STATE_DEF(ControlAO, active)
     QP::QState status_;
     switch (e->sig)
     {
-        case Q_ENTRY_SIG:
-        {
-            // Arm subsystem fault heartbeat timer
-            _faultRequestTimer.armX(_faultRequestTimerInterval, _faultRequestTimerInterval);
-
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        case Q_EXIT_SIG:
-        {
-            status_ = Q_RET_HANDLED;
-            break;
-        }
         case PrivateSignals::SUBS_FAULT_REQUEST_SIG:
         {
             QP::QEvt* evt = Q_NEW(QP::QEvt, bsp::PublicSignals::REQUEST_FAULT_SIG);
@@ -581,6 +651,53 @@ Q_STATE_DEF(ControlAO, error)
             for (uint8_t fault = 0U; fault < Fault::NUM_FAULTS; fault++) { SetFault(_id, fault, false); }
 
             status_ = Q_RET_HANDLED;
+            break;
+        }
+        default:
+        {
+            status_ = super(&root);
+            break;
+        }
+    }
+    return status_;
+}
+
+Q_STATE_DEF(ControlAO, selfprotect)
+{
+    QP::QState status_;
+    switch (e->sig)
+    {
+        case Q_ENTRY_SIG:
+        {
+            // Disable motors
+            stepper::StepperAO::PanInst().Disable();
+            stepper::StepperAO::TiltInst().Disable();
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case Q_EXIT_SIG:
+        {
+            // Require the user to re-enable motors
+
+            // Clear watchdog fault
+            SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::WATCHDOG_FAULT, false);
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::POKE_WATCHDOG_SIG:
+        {
+            // watchdog will be rearmed in initializing if enabled
+            status_ = tran(&initializing);
+            break;
+        }
+        case PrivateSignals::DISABLE_WATCHDOG_SIG:
+        {
+            // disabling watchdog will both disable timer and exit selfprotect mode
+            _watchdogEnable = false;
+            _watchdogTimer.disarm();
+            status_ = tran(&initializing);
             break;
         }
         default:

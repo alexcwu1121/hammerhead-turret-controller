@@ -290,6 +290,16 @@ void cli::onControl(EmbeddedCli* cli, char* args, void* context)
                 control::ControlAO::Inst().PrintFault();
                 handled = true;
             }
+            else if (strcmp(cmd_str, "enable_watchdog") == 0)
+            {
+                control::ControlAO::Inst().EnableWatchdog();
+                handled = true;
+            }
+            else if (strcmp(cmd_str, "disable_watchdog") == 0)
+            {
+                control::ControlAO::Inst().DisableWatchdog();
+                handled = true;
+            }
             break;
         }
         default:
@@ -303,7 +313,9 @@ void cli::onControl(EmbeddedCli* cli, char* args, void* context)
         // Help dialogue
         cli::CLIAO::Inst().Printf(
             "Usage:\n\r"
-            "\tcontrol print_fault\n\r");
+            "\tcontrol print_fault\n\r"
+            "\tcontrol enable_watchdog\n\r"
+            "\tcontrol disable_watchdog\n\r");
     }
 }
 
