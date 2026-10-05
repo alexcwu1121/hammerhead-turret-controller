@@ -16,8 +16,8 @@ constexpr uint32_t TICKS_PER_SEC {1000U};  // NOLINT
 constexpr uint32_t BLINK_PERIOD = 500U;  // NOLINT
 /// @brief Payload chunk size in bytes, 8K
 constexpr uint32_t CHUNK_SIZE = 0x2000U;  // NOLINT
-/// @brief Max time to wait in idle state before booting back into main app code in ms
-constexpr uint32_t IDLE_TIMEOUT = 5000U;
+/// @brief Max time to wait in idle state before booting back into main app in s
+constexpr uint32_t IDLE_TIMEOUT = 5U;
 
 /// @brief Flash max address
 constexpr uint32_t FLASH_END = 0x8020000U;
@@ -85,6 +85,7 @@ enum PubCANID
     CHUNK_CRC_FAIL,
     FLASH_ERASE_FAIL,
     FLASH_PROGRAM_FAIL,
+    NON_FINAL_CHUNK_NOT_MAXSIZE,
     NUM_PUB_IDS
 };
 
@@ -178,7 +179,7 @@ void HandleReceiving(const CAN_RxHeaderTypeDef& header, const uint8_t* const dat
                 HAL_CAN_AddTxMessage(&hcan, &canTxHeader, canTxData, &canTxMailbox);
 
                 state = State::FAULT;
-                break;
+                return;
             }
 
             // regular contribution to a chunk
@@ -220,17 +221,33 @@ void HandleReceiving(const CAN_RxHeaderTypeDef& header, const uint8_t* const dat
                 // if this is not the last chunk in payload, save to flash
                 if (header.StdId == SubCANID::CHUNK_END)
                 {
-                    if (SWAP_FLASH_START + swapFlashOffset + chunkOffset >= FLASH_END)
+                    if (SWAP_FLASH_START + swapFlashOffset + chunkOffset > FLASH_END)
                     {
                         // send fault
                         canTxHeader.DLC = 0U;
                         canTxHeader.StdId = PubCANID::NO_SPACE_IN_SWAP;
                         HAL_CAN_AddTxMessage(&hcan, &canTxHeader, canTxData, &canTxMailbox);
+
+                        state = State::FAULT;
+                        return;
+                    }
+
+                    // non final chunks should be maximum chunk size
+                    if (chunkOffset != CHUNK_SIZE)
+                    {
+                        // send fault
+                        canTxHeader.DLC = 0U;
+                        canTxHeader.StdId = PubCANID::NON_FINAL_CHUNK_NOT_MAXSIZE;
+                        HAL_CAN_AddTxMessage(&hcan, &canTxHeader, canTxData, &canTxMailbox);
+
+                        state = State::FAULT;
+                        return;
                     }
 
                     FLASH_EraseInitTypeDef erase = {0};
                     erase.TypeErase = FLASH_TYPEERASE_PAGES;
                     erase.PageAddress = SWAP_FLASH_START + swapFlashOffset;
+                    // This assumes each non-final chunk is the same (maximum) size
                     erase.NbPages = CHUNK_SIZE / FLASH_PAGE_SIZE;
 
                     HAL_FLASH_Unlock();
@@ -247,7 +264,7 @@ void HandleReceiving(const CAN_RxHeaderTypeDef& header, const uint8_t* const dat
                         HAL_CAN_AddTxMessage(&hcan, &canTxHeader, canTxData, &canTxMailbox);
 
                         state = State::FAULT;
-                        break;
+                        return;
                     }
 
                     // write chunk to flash
@@ -264,7 +281,7 @@ void HandleReceiving(const CAN_RxHeaderTypeDef& header, const uint8_t* const dat
                             HAL_CAN_AddTxMessage(&hcan, &canTxHeader, canTxData, &canTxMailbox);
 
                             state = State::FAULT;
-                            break;
+                            return;
                         }
                     }
 
@@ -286,7 +303,7 @@ void HandleReceiving(const CAN_RxHeaderTypeDef& header, const uint8_t* const dat
                     if (HAL_CAN_AddTxMessage(&hcan, &canTxHeader, canTxData, &canTxMailbox) != HAL_OK)
                     {
                         state = State::FAULT;
-                        break;
+                        return;
                     }
                 }
                 else if (header.StdId == SubCANID::CHUNK_END_LAST)
@@ -313,10 +330,10 @@ void HandleReceiving(const CAN_RxHeaderTypeDef& header, const uint8_t* const dat
                         HAL_CAN_AddTxMessage(&hcan, &canTxHeader, canTxData, &canTxMailbox);
 
                         state = State::FAULT;
-                        break;
+                        return;
                     }
 
-                    // Copy swap and ram contents into main application code page by page
+                    // Copy swap contents into main application code page by page
                     uint8_t buffer[FLASH_PAGE_SIZE];
                     for (uint32_t offset = 0U; offset < swapFlashOffset; offset += FLASH_PAGE_SIZE)
                     {
@@ -339,8 +356,29 @@ void HandleReceiving(const CAN_RxHeaderTypeDef& header, const uint8_t* const dat
                                 HAL_CAN_AddTxMessage(&hcan, &canTxHeader, canTxData, &canTxMailbox);
 
                                 state = State::FAULT;
-                                break;
+                                return;
                             }
+                        }
+                    }
+
+                    // Copy ram contents into main application code
+                    for (uint32_t i = 0U; i < CHUNK_SIZE; i += 4U)
+                    {
+                        uint32_t word;
+                        memcpy(&word, &chunk[i], sizeof(word));
+
+                        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, APP_FLASH_START + swapFlashOffset + i, word) !=
+                            HAL_OK)
+                        {
+                            HAL_FLASH_Lock();
+
+                            // send fault
+                            canTxHeader.DLC = 0U;
+                            canTxHeader.StdId = PubCANID::FLASH_PROGRAM_FAIL;
+                            HAL_CAN_AddTxMessage(&hcan, &canTxHeader, canTxData, &canTxMailbox);
+
+                            state = State::FAULT;
+                            return;
                         }
                     }
 
@@ -482,16 +520,15 @@ int main(void)
     /// TODO: add eeprom 25LC256 to next revision
     /// TODO: also consider compression
 
-    // number of ms spent in idle
-    uint32_t idle_counter = 0U;
+    // idle counter start
+    uint32_t idleStart = HAL_GetTick();
 
     auto blink_state = GPIO_PIN_SET;
     for (;;)
     {
         if (state == State::IDLE)
         {
-            idle_counter++;
-            if (idle_counter > IDLE_TIMEOUT)
+            if (HAL_GetTick() - idleStart > IDLE_TIMEOUT * TICKS_PER_SEC)
             {
                 // trigger reset and go back to main application
                 NVIC_SystemReset();
