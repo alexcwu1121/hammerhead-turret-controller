@@ -6,7 +6,6 @@
 #include "bsp.hpp"
 #include "can.h"
 #include "gpio.h"
-#include "i2c.h"
 #include "qpcpp.hpp"
 #include "spi.h"
 #include "stm32f3xx_it.h"

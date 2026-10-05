@@ -13,6 +13,7 @@ target_include_directories(hal
 target_sources(hal
     PRIVATE
         Core/Src/can.c
+        Core/Src/crc.c
         Core/Src/gpio.c
         Core/Src/i2c.c
         Core/Src/spi.c
@@ -29,6 +30,8 @@ target_sources(hal
         Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_gpio.c
         Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dma.c
         Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c
+        Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_crc.c
+        Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_crc_ex.c
         Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_cortex.c
         Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_pwr.c
         Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_flash.c

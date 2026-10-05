@@ -12,6 +12,9 @@ target_link_libraries(qpcpp
         hal
 )
 
+# Build can loader
+add_subdirectory(canloader)
+
 # Build htc application
 add_executable(${CMAKE_PROJECT_NAME})
 target_include_directories(${CMAKE_PROJECT_NAME}
