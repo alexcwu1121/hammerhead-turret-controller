@@ -22,6 +22,8 @@ enum PubCANID : uint16_t
     PUB_IMU_DATA_ACC_Z_GYR_X,
     PUB_IMU_DATA_GYR_Y_GYR_Z,
     PUB_HEARTBEAT,
+    PUB_PAN_ENC_STATE,        // [0:3] absolute position (rad, float), [4:7] angular velocity (rad/s, float)
+    PUB_TILT_ENC_STATE,       // [0:3] absolute position (rad, float), [4:7] angular velocity (rad/s, float)
     PUB_FAULT_INDEX = 0x320,  // starting index for faults
     MAX_PUB_ID
 };
@@ -326,6 +328,7 @@ Q_STATE_DEF(ControlAO, initial)
     Q_UNUSED_PAR(e);
     subscribe(bsp::PublicSignals::FAULT_SIG);
     subscribe(bsp::PublicSignals::IMU_SIG);
+    subscribe(bsp::PublicSignals::STEPPER_ENC_STATE_SIG);
 
     return tran(&initializing);
 }
@@ -471,6 +474,35 @@ Q_STATE_DEF(ControlAO, root)
             status_ = Q_RET_HANDLED;
             break;
         }
+        case bsp::PublicSignals::STEPPER_ENC_STATE_SIG:
+        {
+            // Select telemetry ID by originating stepper
+            bsp::SubsystemID id = Q_EVT_CAST(bsp::StepperEncStateEvt)->id;
+            if (id == bsp::SubsystemID::PAN_STEPPER_SUBSYSTEM) { _canTxHeader.StdId = PubCANID::PUB_PAN_ENC_STATE; }
+            else if (id == bsp::SubsystemID::TILT_STEPPER_SUBSYSTEM)
+            {
+                _canTxHeader.StdId = PubCANID::PUB_TILT_ENC_STATE;
+            }
+            else
+            {
+                // Unknown origin, nothing to publish
+                status_ = Q_RET_HANDLED;
+                break;
+            }
+
+            // Absolute position and angular velocity
+            _canTxHeader.DLC = 8;
+            memcpy(_canTxData, &Q_EVT_CAST(bsp::StepperEncStateEvt)->absPos, sizeof(float));
+            memcpy(_canTxData + 4, &Q_EVT_CAST(bsp::StepperEncStateEvt)->rate, sizeof(float));
+            if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
+            {
+                SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_CAN_TX_FAILED, true);
+            }
+            else { SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_CAN_TX_FAILED, false); }
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         case PrivateSignals::HEARTBEAT_SIG:
         {
             _canTxHeader.DLC = 0;
@@ -586,6 +618,9 @@ Q_STATE_DEF(ControlAO, initializing)
 
             // Arm watchdog timer
             if (_watchdogEnable) { _watchdogTimer.armX(_watchdogTimerInterval, 0U); }
+
+            // Arm heartbeat timer
+            _heartbeatTimer.armX(_heartbeatTimerInterval, _heartbeatTimerInterval);
 
             // Finish initialization
             _hasFirstTimeInit = true;
