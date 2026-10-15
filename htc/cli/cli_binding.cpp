@@ -167,6 +167,34 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
                     handled = true;
                 }
             }
+            else if (strcmp(cmd_str, "enableinstantstop") == 0)
+            {
+                if (strcmp(opt_str, "pan") == 0 || strcmp(opt_str, "all") == 0)
+                {
+                    stepper::StepperAO::PanInst().EnableInstantStop();
+                    handled = true;
+                }
+
+                if (strcmp(opt_str, "tilt") == 0 || strcmp(opt_str, "all") == 0)
+                {
+                    stepper::StepperAO::TiltInst().EnableInstantStop();
+                    handled = true;
+                }
+            }
+            else if (strcmp(cmd_str, "disableinstantstop") == 0)
+            {
+                if (strcmp(opt_str, "pan") == 0 || strcmp(opt_str, "all") == 0)
+                {
+                    stepper::StepperAO::PanInst().DisableInstantStop();
+                    handled = true;
+                }
+
+                if (strcmp(opt_str, "tilt") == 0 || strcmp(opt_str, "all") == 0)
+                {
+                    stepper::StepperAO::TiltInst().DisableInstantStop();
+                    handled = true;
+                }
+            }
             break;
         }
         case 3U:
@@ -248,6 +276,60 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
                     handled = true;
                 }
             }
+            else if (strcmp(cmd_str, "setkp") == 0)
+            {
+                const char* motor_str = embeddedCliGetToken(args, 2U);
+                const char* kp_str = embeddedCliGetToken(args, 3U);
+                float kp = strtofS(kp_str);
+
+                if (strcmp(motor_str, "pan") == 0 || strcmp(motor_str, "all") == 0)
+                {
+                    stepper::StepperAO::PanInst().SetPosKp(kp);
+                    handled = true;
+                }
+
+                if (strcmp(motor_str, "tilt") == 0 || strcmp(motor_str, "all") == 0)
+                {
+                    stepper::StepperAO::TiltInst().SetPosKp(kp);
+                    handled = true;
+                }
+            }
+            else if (strcmp(cmd_str, "setki") == 0)
+            {
+                const char* motor_str = embeddedCliGetToken(args, 2U);
+                const char* ki_str = embeddedCliGetToken(args, 3U);
+                float ki = strtofS(ki_str);
+
+                if (strcmp(motor_str, "pan") == 0 || strcmp(motor_str, "all") == 0)
+                {
+                    stepper::StepperAO::PanInst().SetPosKi(ki);
+                    handled = true;
+                }
+
+                if (strcmp(motor_str, "tilt") == 0 || strcmp(motor_str, "all") == 0)
+                {
+                    stepper::StepperAO::TiltInst().SetPosKi(ki);
+                    handled = true;
+                }
+            }
+            else if (strcmp(cmd_str, "setkd") == 0)
+            {
+                const char* motor_str = embeddedCliGetToken(args, 2U);
+                const char* kd_str = embeddedCliGetToken(args, 3U);
+                float kd = strtofS(kd_str);
+
+                if (strcmp(motor_str, "pan") == 0 || strcmp(motor_str, "all") == 0)
+                {
+                    stepper::StepperAO::PanInst().SetPosKd(kd);
+                    handled = true;
+                }
+
+                if (strcmp(motor_str, "tilt") == 0 || strcmp(motor_str, "all") == 0)
+                {
+                    stepper::StepperAO::TiltInst().SetPosKd(kd);
+                    handled = true;
+                }
+            }
             break;
         }
         default:
@@ -267,6 +349,9 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
             "\tturret setratedirect [all|pan|tilt] [rate (rad/s)]\n\r"
             "\tturret setrate [all|pan|tilt] [rate (rad/s)]\n\r"
             "\tturret setpos [all|pan|tilt] [pos (rad)]\n\r"
+            "\tturret setkp [all|pan|tilt] [val]\n\r"
+            "\tturret setki [all|pan|tilt] [val]\n\r"
+            "\tturret setkd [all|pan|tilt] [val]\n\r"
             "\tturret disable [all|pan|tilt]\n\r"
             "\tturret enable [all|pan|tilt]\n\r"
             "\tturret home [all|pan|tilt]\n\r"

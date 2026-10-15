@@ -85,6 +85,9 @@ public:
     /// @brief Disable watchdog
     inline void DisableWatchdog();
 
+    /// @brief Notify that a CAN TX mailbox has been released. ISR safe.
+    inline void NotifyCANTxReady();
+
 private:
     /// @brief Subsystem ID
     bsp::SubsystemID _id;
@@ -106,6 +109,11 @@ private:
     /// @brief Latest faults from all subsystems, including control subsystem
     bool _faultStates[bsp::SubsystemID::NUM_SUBSYSTEMS][bsp::MAX_SUBSYSTEM_FAULTS] = {0};
 
+    /// @brief IMU publish period in ms
+    uint32_t _imuPubPeriod {50u};
+    /// @brief IMU publish rate reduction counter
+    uint32_t _imuPubCounter {0u};
+
     /// @brief CAN TX header
     CAN_TxHeaderTypeDef _canTxHeader;
     /// @brief CAN TX data
@@ -113,7 +121,15 @@ private:
     /// @brief CAN TX mailbox
     uint32_t _canTxMailbox;
 
-    /// @brief Heartbeat CAN publish timer
+    /// @brief CAN TX deferred queue size. Frames beyond this while all mailboxes are busy are dropped.
+    static constexpr uint16_t _canTxDeferQueueSize = 16U;
+    /// @brief CAN TX deferred queue storage
+    QP::QEvtPtr _canTxDeferQueueSto[_canTxDeferQueueSize] = {0};
+    /// @brief CAN TX deferred queue. Holds frames that could not be placed in a TX mailbox.
+    QP::QEQueue _canTxDeferQueue;
+    /// @brief Event pool blocks to leave free for other users when allocating deferred CAN TX frames
+    static constexpr uint16_t _canTxPoolMargin = 4U;
+
     QP::QTimeEvt _heartbeatTimer;
     /// @brief Heartbeat CAN publish timer period
     static constexpr uint32_t _heartbeatTimerInterval = bsp::TICKS_PER_SEC / 5U;
@@ -143,11 +159,36 @@ private:  // NOLINT
         WATCHDOG_EXPIRED_SIG,
         ENABLE_WATCHDOG_SIG,
         DISABLE_WATCHDOG_SIG,
+        CAN_TX_SIG,
+        CAN_TX_READY_SIG,
         MAX_PRIV_SIG
+    };
+
+    /// @brief Deferred CAN TX frame event
+    class CANTxEvt : public QP::QEvt
+    {
+    public:
+        CANTxEvt(QP::QSignal sig) : QP::QEvt(sig) {}
+        uint16_t stdId;
+        uint8_t dlc;
+        uint8_t data[8];
     };
 
     /// @brief Set and publish fault
     void SetFault(bsp::SubsystemID subsystem, uint8_t fault, bool active);
+
+    /// @brief Transmit a CAN frame, or defer it until a TX mailbox is free. Frames are sent in order.
+    /// @param stdId standard CAN ID
+    /// @param data frame payload
+    /// @param dlc payload length (0-8)
+    void TransmitCAN(uint16_t stdId, const uint8_t* data, uint8_t dlc);
+
+    /// @brief Place a CAN frame directly in a TX mailbox
+    /// @return true if the frame was accepted by the peripheral
+    bool AddCANTxMessage(uint16_t stdId, const uint8_t* data, uint8_t dlc);
+
+    /// @brief Send deferred CAN frames while TX mailboxes are free, and stop TX notifications once none remain
+    void SendDeferredCANTx();
 
     /// @brief Initial state
     Q_STATE_DECL(initial);
@@ -204,6 +245,15 @@ inline void ControlAO::DisableWatchdog()
     if (_isStarted)
     {
         static QP::QEvt evt(PrivateSignals::DISABLE_WATCHDOG_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void ControlAO::NotifyCANTxReady()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::CAN_TX_READY_SIG);
         POST(&evt, this);
     }
 }

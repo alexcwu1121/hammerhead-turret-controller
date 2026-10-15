@@ -3,6 +3,7 @@
 
 #include "a4988.hpp"
 #include "bsp.hpp"
+#include "fir.hpp"
 #include "pid.hpp"
 #include "qpcpp.hpp"
 
@@ -20,9 +21,9 @@ static constexpr float pi = 3.14159265358979323846f;
 static constexpr float counts2Rad = 2 * pi / (encoderCPR * gearRatio);
 /// @brief Degree to radian conversion factor
 static constexpr float deg2rad = pi / 180.0f;
-/// @brief Maximum angular velocity setpoint. NEMA8 maximum angular velocity ~150 rad/s. Anything above and risk
-/// stalling.
-static constexpr float maxRate = 150.0f / gearRatio;
+/// @brief Maximum angular velocity setpoint. NEMA8 maximum angular velocity ~100 rad/s at the shaft pre-gearbox.
+/// Anything above and risk stalling.
+static constexpr float maxRate = 100.0f / gearRatio;
 
 /// @brief Axis in NED frame
 enum Axis : uint8_t
@@ -106,7 +107,7 @@ enum Mode : uint8_t
 struct Options
 {
     /// @brief Closed loop rate control maximum slew rate (rad). Not time normalized.
-    float clSlewRate = 0.50f;
+    float clSlewRate = 1.0f;
     /// @brief Position PID proportional gain
     float posKp = 5.0f;
     /// @brief Position PID integral gain
@@ -163,11 +164,23 @@ public:
     /// @brief Set rate control slew rate (rad)
     inline void SetRateSlew(float slew);
 
-    /// @brief Set PID gains
-    inline void SetPIDGains(float kp, float ki, float kd);  // NOLINT
+    /// @brief Set PID proportional gain
+    inline void SetPosKp(float kp);  // NOLINT
+
+    /// @brief Set PID integral gain
+    inline void SetPosKi(float ki);  // NOLINT
+
+    /// @brief Set PID derivative gain
+    inline void SetPosKd(float kd);  // NOLINT
 
     /// @brief Set absolute home position (rad)
     inline void SetHome(float home);
+
+    /// @brief Enable instant rate control stop
+    inline void EnableInstantStop();
+
+    /// @brief Disable instant rate control stop
+    inline void DisableInstantStop();
 
     /// @brief Enable IMU stabilization
     inline void EnableStabilization();
@@ -215,20 +228,20 @@ private:
     /// @brief Fault states
     bool _faultStates[stepper::Fault::NUM_FAULTS] = {false};
 
-    /// @brief Rate IIR filter learning rate
-    static constexpr float _iirAlpha = 1.0f;
-
     /// @brief Encoder polling timer
     QP::QTimeEvt _encoderPollTimer;
     /// @brief Encoder polling timer frequency in Hz
-    static constexpr uint32_t _encoderPollTimerFreq = 100U;
+    static constexpr uint32_t _encoderPollTimerFreq = 500U;
     /// @brief Encoder polling timer interval
     static constexpr uint32_t _encoderPollTimerInterval = bsp::TICKS_PER_SEC / _encoderPollTimerFreq;
+
+    /// @brief Encoder rate measurement filter
+    csys::FIR<1> _encoderRateFIR;
 
     /// @brief Closed loop stepper control polling timer
     QP::QTimeEvt _clTimer;
     /// @brief Stepper closed loop control timer frequency in Hz
-    static constexpr uint32_t _clTimerFreq = 50U;
+    static constexpr uint32_t _clTimerFreq = 100U;
     /// @brief Stepper closed loop control update interval
     static constexpr uint32_t _clTimerInterval = bsp::TICKS_PER_SEC / _clTimerFreq;
 
@@ -238,7 +251,7 @@ private:
     static constexpr uint32_t _encoderStreamTimerInterval = bsp::TICKS_PER_SEC / 5U;
 
     /// @brief Position PID controller
-    csys::PID _posPID;
+    csys::PID<1> _posPID;
 
     /// @brief Stepper optional parameters
     Options _options;
@@ -278,9 +291,13 @@ private:
         SET_RATE_DIRECT_SIG,
         SET_RATE_SIG,
         SET_POS_SIG,
-        SET_PID_GAINS_SIG,
+        SET_KP_SIG,
+        SET_KI_SIG,
+        SET_KD_SIG,
         SET_RATE_SLEW_SIG,
         SET_HOME_SIG,
+        ENABLE_INSTANT_STOP,
+        DISABLE_INSTANT_STOP,
         ENABLE_STABILIZATION_SIG,
         DISABLE_STABILIZATION_SIG,
         ENABLE_SIG,
@@ -310,16 +327,6 @@ private:
         Mode mode;
     };
 
-    /// @brief PID gain set event
-    class SetPIDGainsEvt : public QP::QEvt
-    {
-    public:
-        SetPIDGainsEvt(QP::QSignal sig) : QP::QEvt(sig) {}
-        float kp;
-        float ki;
-        float kd;
-    };
-
     /// @brief Set and publish fault
     void SetFault(bsp::SubsystemID subsystem, uint8_t fault, bool active);
 
@@ -329,7 +336,7 @@ private:
     /// @param[out] freq step frequency
     /// @param[out] resolution step resolution
     /// @return void
-    static void GetFreqResolutionForRate(float omega, float& freq, a4988::StepResolution& resolution);
+    void GetFreqResolutionForRate(float omega, float& freq, a4988::StepResolution& resolution);
 
     /// @brief Given a desired angular velocity, configure stepper drive pwm waveform
     /// @param[in] omega angular velocity
@@ -398,14 +405,32 @@ inline void StepperAO::SetPositionSetpoint(float pos)
     }
 }
 
-inline void StepperAO::SetPIDGains(float kp, float ki, float kd)  // NOLINT
+inline void StepperAO::SetPosKp(float kp)  // NOLINT
 {
     if (_isStarted)
     {
-        SetPIDGainsEvt* evt = Q_NEW(SetPIDGainsEvt, PrivateSignals::SET_PID_GAINS_SIG);
-        evt->kp = kp;
-        evt->ki = ki;
-        evt->kd = kd;
+        SetpointEvt* evt = Q_NEW(SetpointEvt, PrivateSignals::SET_KP_SIG);
+        evt->setpoint = kp;
+        POST(evt, this);
+    }
+}
+
+inline void StepperAO::SetPosKi(float ki)  // NOLINT
+{
+    if (_isStarted)
+    {
+        SetpointEvt* evt = Q_NEW(SetpointEvt, PrivateSignals::SET_KI_SIG);
+        evt->setpoint = ki;
+        POST(evt, this);
+    }
+}
+
+inline void StepperAO::SetPosKd(float kd)  // NOLINT
+{
+    if (_isStarted)
+    {
+        SetpointEvt* evt = Q_NEW(SetpointEvt, PrivateSignals::SET_KD_SIG);
+        evt->setpoint = kd;
         POST(evt, this);
     }
 }
@@ -427,6 +452,24 @@ inline void StepperAO::SetHome(float home)
         SetpointEvt* evt = Q_NEW(SetpointEvt, PrivateSignals::SET_HOME_SIG);
         evt->setpoint = home;
         POST(evt, this);
+    }
+}
+
+inline void StepperAO::EnableInstantStop()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::ENABLE_INSTANT_STOP);
+        POST(&evt, this);
+    }
+}
+
+inline void StepperAO::DisableInstantStop()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::DISABLE_INSTANT_STOP);
+        POST(&evt, this);
     }
 }
 

@@ -124,7 +124,7 @@ public:
 
 private:
     /// @brief Minimum step frequency before round down to zero (Hz)
-    static constexpr uint32_t _minimumStepFrequency {2u};
+    static constexpr uint32_t _minimumStepFrequency {5u};
 
     /// @brief A4988 peripheral assignments
     A4988Peripherals _periph;

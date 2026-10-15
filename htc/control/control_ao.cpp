@@ -44,10 +44,18 @@ enum SubCANID : uint16_t
     SUB_SET_RATE_TILT,
     SUB_SET_POS_PAN,
     SUB_SET_POS_TILT,
-    SUB_PID_GAINS_PAN,
+    SUB_SET_POS_KP_PAN,
+    SUB_SET_POS_KI_PAN,
+    SUB_SET_POS_KD_PAN,
     SUB_RATE_SLEW_PAN,
-    SUB_PID_GAINS_TILT,
+    SUB_SET_POS_KP_TILT,
+    SUB_SET_POS_KI_TILT,
+    SUB_SET_POS_KD_TILT,
     SUB_RATE_SLEW_TILT,
+    SUB_ENABLE_TILT_INSTANT_STOP,
+    SUB_ENABLE_PAN_INSTANT_STOP,
+    SUB_DISABLE_TILT_INSTANT_STOP,
+    SUB_DISABLE_PAN_INSTANT_STOP,
     SUB_ENABLE_TILT_STABILIZATION,
     SUB_ENABLE_PAN_STABILIZATION,
     SUB_DISABLE_TILT_STABILIZATION,
@@ -160,18 +168,33 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
                     }
                     break;
                 }
-                case SubCANID::SUB_PID_GAINS_PAN:
+                case SubCANID::SUB_SET_POS_KP_PAN:
                 {
-                    if (header.DLC == 6)
+                    if (header.DLC == 4)
                     {
-                        uint16_t kp_u;
-                        uint16_t ki_u;
-                        uint16_t kd_u;
-                        memcpy(&kp_u, data, sizeof(uint16_t));
-                        memcpy(&ki_u, data + 2, sizeof(uint16_t));
-                        memcpy(&kd_u, data + 4, sizeof(uint16_t));
-                        stepper::StepperAO::PanInst().SetPIDGains(static_cast<float>(kp_u), static_cast<float>(ki_u),
-                                                                  static_cast<float>(kd_u));
+                        float kp;
+                        memcpy(&kp, data, sizeof(float));
+                        stepper::StepperAO::PanInst().SetPosKp(kp);
+                    }
+                    break;
+                }
+                case SubCANID::SUB_SET_POS_KI_PAN:
+                {
+                    if (header.DLC == 4)
+                    {
+                        float ki;
+                        memcpy(&ki, data, sizeof(float));
+                        stepper::StepperAO::PanInst().SetPosKi(ki);
+                    }
+                    break;
+                }
+                case SubCANID::SUB_SET_POS_KD_PAN:
+                {
+                    if (header.DLC == 4)
+                    {
+                        float kd;
+                        memcpy(&kd, data, sizeof(float));
+                        stepper::StepperAO::PanInst().SetPosKd(kd);
                     }
                     break;
                 }
@@ -185,18 +208,33 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
                     }
                     break;
                 }
-                case SubCANID::SUB_PID_GAINS_TILT:
+                case SubCANID::SUB_SET_POS_KP_TILT:
                 {
-                    if (header.DLC == 6)
+                    if (header.DLC == 4)
                     {
-                        uint16_t kp_u;
-                        uint16_t ki_u;
-                        uint16_t kd_u;
-                        memcpy(&kp_u, data, sizeof(uint16_t));
-                        memcpy(&ki_u, data + 2, sizeof(uint16_t));
-                        memcpy(&kd_u, data + 4, sizeof(uint16_t));
-                        stepper::StepperAO::TiltInst().SetPIDGains(static_cast<float>(kp_u), static_cast<float>(ki_u),
-                                                                   static_cast<float>(kd_u));
+                        float kp;
+                        memcpy(&kp, data, sizeof(float));
+                        stepper::StepperAO::TiltInst().SetPosKp(kp);
+                    }
+                    break;
+                }
+                case SubCANID::SUB_SET_POS_KI_TILT:
+                {
+                    if (header.DLC == 4)
+                    {
+                        float ki;
+                        memcpy(&ki, data, sizeof(float));
+                        stepper::StepperAO::TiltInst().SetPosKi(ki);
+                    }
+                    break;
+                }
+                case SubCANID::SUB_SET_POS_KD_TILT:
+                {
+                    if (header.DLC == 4)
+                    {
+                        float kd;
+                        memcpy(&kd, data, sizeof(float));
+                        stepper::StepperAO::TiltInst().SetPosKd(kd);
                     }
                     break;
                 }
@@ -208,6 +246,26 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
                         memcpy(&slew, data, sizeof(float));
                         stepper::StepperAO::TiltInst().SetRateSlew(slew);
                     }
+                    break;
+                }
+                case SubCANID::SUB_ENABLE_PAN_INSTANT_STOP:
+                {
+                    stepper::StepperAO::PanInst().EnableInstantStop();
+                    break;
+                }
+                case SubCANID::SUB_ENABLE_TILT_INSTANT_STOP:
+                {
+                    stepper::StepperAO::TiltInst().EnableInstantStop();
+                    break;
+                }
+                case SubCANID::SUB_DISABLE_PAN_INSTANT_STOP:
+                {
+                    stepper::StepperAO::PanInst().DisableInstantStop();
+                    break;
+                }
+                case SubCANID::SUB_DISABLE_TILT_INSTANT_STOP:
+                {
+                    stepper::StepperAO::TiltInst().DisableInstantStop();
                     break;
                 }
                 case SubCANID::SUB_ENABLE_PAN_STABILIZATION:
@@ -264,6 +322,56 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
     }
 }
 
+/// @brief CAN TX mailbox 0 transmission complete callback
+/// @param hcan
+extern "C" void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef* hcan)
+{
+    control::ControlAO::Inst().NotifyCANTxReady();
+}
+
+/// @brief CAN TX mailbox 1 transmission complete callback
+/// @param hcan
+extern "C" void HAL_CAN_TxMailbox1CompleteCallback(CAN_HandleTypeDef* hcan)
+{
+    control::ControlAO::Inst().NotifyCANTxReady();
+}
+
+/// @brief CAN TX mailbox 2 transmission complete callback
+/// @param hcan
+extern "C" void HAL_CAN_TxMailbox2CompleteCallback(CAN_HandleTypeDef* hcan)
+{
+    control::ControlAO::Inst().NotifyCANTxReady();
+}
+
+/// @brief CAN TX mailbox 0 abort callback
+/// @param hcan
+extern "C" void HAL_CAN_TxMailbox0AbortCallback(CAN_HandleTypeDef* hcan)
+{
+    control::ControlAO::Inst().NotifyCANTxReady();
+}
+
+/// @brief CAN TX mailbox 1 abort callback
+/// @param hcan
+extern "C" void HAL_CAN_TxMailbox1AbortCallback(CAN_HandleTypeDef* hcan)
+{
+    control::ControlAO::Inst().NotifyCANTxReady();
+}
+
+/// @brief CAN TX mailbox 2 abort callback
+/// @param hcan
+extern "C" void HAL_CAN_TxMailbox2AbortCallback(CAN_HandleTypeDef* hcan)
+{
+    control::ControlAO::Inst().NotifyCANTxReady();
+}
+
+/// @brief CAN error callback. A failed transmission (arbitration lost or transmit error) releases its mailbox and
+/// is only reported here since automatic retransmission is disabled.
+/// @param hcan
+extern "C" void HAL_CAN_ErrorCallback(CAN_HandleTypeDef* hcan)
+{
+    control::ControlAO::Inst().NotifyCANTxReady();
+}
+
 namespace control
 {
 ControlAO::ControlAO() :
@@ -277,6 +385,7 @@ ControlAO::ControlAO() :
 void ControlAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
 {
     _id = id;
+    _canTxDeferQueue.init(_canTxDeferQueueSto, _canTxDeferQueueSize);
     _isStarted = true;
     this->start(priority,      // QP prio. of the AO
                 _queue,        // event queue storage
@@ -321,6 +430,68 @@ void ControlAO::SetFault(bsp::SubsystemID id, uint8_t fault, bool active)
             else { HAL_GPIO_WritePin(FAULT_LED_GPIO_Port, FAULT_LED_Pin, GPIO_PIN_RESET); }
         }
     }
+
+    // make sure we haven't overflowed into the sub id region
+    auto stdid = PubCANID::PUB_FAULT_INDEX + id * bsp::MAX_SUBSYSTEM_FAULTS + fault;
+
+    if (stdid >= SubCANIDIdx)
+    {
+        // we could trap ourselves in a recursion here if the fault is can tx fault...
+        // just don't report this particular fault if address overflow has occurred
+        return;
+    }
+
+    TransmitCAN(stdid, (uint8_t*)&active, 1);
+}
+
+void ControlAO::TransmitCAN(uint16_t stdId, const uint8_t* data, uint8_t dlc)
+{
+    // Send immediately if nothing is waiting ahead of this frame and a mailbox is free
+    if (_canTxDeferQueue.isEmpty() && HAL_CAN_GetTxMailboxesFreeLevel(&hcan) > 0U)
+    {
+        SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_CAN_TX_FAILED, !AddCANTxMessage(stdId, data, dlc));
+        return;
+    }
+
+    // Otherwise defer until a mailbox is released. Drop the frame if there is no room to hold it.
+    CANTxEvt* evt = nullptr;
+    if (_canTxDeferQueue.getFree() > 0U) { evt = Q_NEW_X(CANTxEvt, _canTxPoolMargin, PrivateSignals::CAN_TX_SIG); }
+    if (evt == nullptr)
+    {
+        SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_CAN_TX_FAILED, true);
+        return;
+    }
+    evt->stdId = stdId;
+    evt->dlc = dlc;
+    memcpy(evt->data, data, dlc);
+    defer(&_canTxDeferQueue, evt);
+
+    // Get notified when a mailbox is released
+    HAL_CAN_ActivateNotification(&hcan, CAN_IT_TX_MAILBOX_EMPTY);
+}
+
+bool ControlAO::AddCANTxMessage(uint16_t stdId, const uint8_t* data, uint8_t dlc)
+{
+    _canTxHeader.StdId = stdId;
+    _canTxHeader.DLC = dlc;
+    return HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, data, &_canTxMailbox) == HAL_OK;
+}
+
+void ControlAO::SendDeferredCANTx()
+{
+    // Send deferred frames in order while mailboxes are free
+    while (!_canTxDeferQueue.isEmpty() && HAL_CAN_GetTxMailboxesFreeLevel(&hcan) > 0U)
+    {
+        const CANTxEvt* tx = static_cast<const CANTxEvt*>(_canTxDeferQueue.get(getPrio()));
+        SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_CAN_TX_FAILED,
+                 !AddCANTxMessage(tx->stdId, tx->data, tx->dlc));
+
+        // Frame was taken out of the queue directly rather than dispatched, so it must be released here
+        QP::QF::gc(tx);
+    }
+
+    // Nothing left to send, stop mailbox notifications
+    if (_canTxDeferQueue.isEmpty()) { HAL_CAN_DeactivateNotification(&hcan, CAN_IT_TX_MAILBOX_EMPTY); }
 }
 
 Q_STATE_DEF(ControlAO, initial)
@@ -432,44 +603,29 @@ Q_STATE_DEF(ControlAO, root)
         }
         case bsp::PublicSignals::IMU_SIG:
         {
-            _canTxHeader.DLC = 8;
-            // Fragment IMU data into 8 byte chunks and send
-
-            // Accelerometer x and y
-            _canTxHeader.StdId = PubCANID::PUB_IMU_DATA_ACC_XY;
-            memcpy(_canTxData, &Q_EVT_CAST(imu::IMUEvt)->data.acc[0], sizeof(float));
-            memcpy(_canTxData + 4, &Q_EVT_CAST(imu::IMUEvt)->data.acc[1], sizeof(float));
-            if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
+            if (_imuPubCounter * bsp::TICKS_PER_SEC / imu::IMUAO::imuTimerFreq > _imuPubPeriod) { _imuPubCounter++; }
+            else
             {
-                SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_CAN_TX_FAILED, true);
-                status_ = Q_RET_HANDLED;
-                break;
-            }
+                // reset pub counter
+                _imuPubCounter = 0u;
 
-            // Accelerometer z and gyro x
-            _canTxHeader.StdId = PubCANID::PUB_IMU_DATA_ACC_Z_GYR_X;
-            memcpy(_canTxData, &Q_EVT_CAST(imu::IMUEvt)->data.acc[2], sizeof(float));
-            memcpy(_canTxData + 4, &Q_EVT_CAST(imu::IMUEvt)->data.gyr[0], sizeof(float));
-            if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
-            {
-                SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_CAN_TX_FAILED, true);
-                status_ = Q_RET_HANDLED;
-                break;
-            }
+                // Fragment IMU data into 8 byte chunks and send
 
-            // Gyro y and z
-            _canTxHeader.StdId = PubCANID::PUB_IMU_DATA_GYR_Y_GYR_Z;
-            memcpy(_canTxData, &Q_EVT_CAST(imu::IMUEvt)->data.gyr[1], sizeof(float));
-            memcpy(_canTxData + 4, &Q_EVT_CAST(imu::IMUEvt)->data.gyr[2], sizeof(float));
-            if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
-            {
-                SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_CAN_TX_FAILED, true);
-                status_ = Q_RET_HANDLED;
-                break;
-            }
+                // Accelerometer x and y
+                memcpy(_canTxData, &Q_EVT_CAST(imu::IMUEvt)->data.acc[0], sizeof(float));
+                memcpy(_canTxData + 4, &Q_EVT_CAST(imu::IMUEvt)->data.acc[1], sizeof(float));
+                TransmitCAN(PubCANID::PUB_IMU_DATA_ACC_XY, _canTxData, 8U);
 
-            // Automatically clear fault state on successful transmission
-            SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_CAN_TX_FAILED, false);
+                // Accelerometer z and gyro x
+                memcpy(_canTxData, &Q_EVT_CAST(imu::IMUEvt)->data.acc[2], sizeof(float));
+                memcpy(_canTxData + 4, &Q_EVT_CAST(imu::IMUEvt)->data.gyr[0], sizeof(float));
+                TransmitCAN(PubCANID::PUB_IMU_DATA_ACC_Z_GYR_X, _canTxData, 8U);
+
+                // Gyro y and z
+                memcpy(_canTxData, &Q_EVT_CAST(imu::IMUEvt)->data.gyr[1], sizeof(float));
+                memcpy(_canTxData + 4, &Q_EVT_CAST(imu::IMUEvt)->data.gyr[2], sizeof(float));
+                TransmitCAN(PubCANID::PUB_IMU_DATA_GYR_Y_GYR_Z, _canTxData, 8U);
+            }
 
             status_ = Q_RET_HANDLED;
             break;
@@ -477,12 +633,10 @@ Q_STATE_DEF(ControlAO, root)
         case bsp::PublicSignals::STEPPER_ENC_STATE_SIG:
         {
             // Select telemetry ID by originating stepper
+            uint16_t std_id;
             bsp::SubsystemID id = Q_EVT_CAST(bsp::StepperEncStateEvt)->id;
-            if (id == bsp::SubsystemID::PAN_STEPPER_SUBSYSTEM) { _canTxHeader.StdId = PubCANID::PUB_PAN_ENC_STATE; }
-            else if (id == bsp::SubsystemID::TILT_STEPPER_SUBSYSTEM)
-            {
-                _canTxHeader.StdId = PubCANID::PUB_TILT_ENC_STATE;
-            }
+            if (id == bsp::SubsystemID::PAN_STEPPER_SUBSYSTEM) { std_id = PubCANID::PUB_PAN_ENC_STATE; }
+            else if (id == bsp::SubsystemID::TILT_STEPPER_SUBSYSTEM) { std_id = PubCANID::PUB_TILT_ENC_STATE; }
             else
             {
                 // Unknown origin, nothing to publish
@@ -491,27 +645,23 @@ Q_STATE_DEF(ControlAO, root)
             }
 
             // Absolute position and angular velocity
-            _canTxHeader.DLC = 8;
             memcpy(_canTxData, &Q_EVT_CAST(bsp::StepperEncStateEvt)->absPos, sizeof(float));
             memcpy(_canTxData + 4, &Q_EVT_CAST(bsp::StepperEncStateEvt)->rate, sizeof(float));
-            if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
-            {
-                SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_CAN_TX_FAILED, true);
-            }
-            else { SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_CAN_TX_FAILED, false); }
+            TransmitCAN(std_id, _canTxData, 8U);
 
             status_ = Q_RET_HANDLED;
             break;
         }
         case PrivateSignals::HEARTBEAT_SIG:
         {
-            _canTxHeader.DLC = 0;
-            _canTxHeader.StdId = PubCANID::PUB_HEARTBEAT;
-            if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
-            {
-                SetFault(bsp::SubsystemID::CONTROL_SUBSYSTEM, Fault::CONTROL_CAN_TX_FAILED, true);
-            }
-
+            TransmitCAN(PubCANID::PUB_HEARTBEAT, _canTxData, 0U);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::CAN_TX_READY_SIG:
+        {
+            // A mailbox was released
+            SendDeferredCANTx();
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -620,7 +770,7 @@ Q_STATE_DEF(ControlAO, initializing)
             if (_watchdogEnable) { _watchdogTimer.armX(_watchdogTimerInterval, 0U); }
 
             // Arm heartbeat timer
-            _heartbeatTimer.armX(_heartbeatTimerInterval, _heartbeatTimerInterval);
+            if (!_hasFirstTimeInit) { _heartbeatTimer.armX(_heartbeatTimerInterval, _heartbeatTimerInterval); }
 
             // Finish initialization
             _hasFirstTimeInit = true;

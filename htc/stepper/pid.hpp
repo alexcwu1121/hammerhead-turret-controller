@@ -1,9 +1,12 @@
 #ifndef PID_HPP_
 #define PID_HPP_
 
+#include "fir.hpp"
+
 namespace csys
 {
 /// @brief Simple discrete PID implementation
+template <uint8_t S>
 class PID
 {
 public:
@@ -19,6 +22,7 @@ public:
     {
         _iAccum = 0.0f;
         _prevError = 0.0f;
+        _dfir.Reset();
     }
 
     /// @brief Set gains
@@ -43,7 +47,8 @@ public:
 
         float effort = _kp * error;
         effort += _ki * _iAccum;
-        effort += _kd * (error - _prevError) / dt;
+
+        effort += _kd * _dfir.Update((error - _prevError) / dt);
 
         // integrate and save previous error
         _iAccum += error * dt;
@@ -64,6 +69,9 @@ private:
     float _iAccum {0.0f};
     /// @brief Previous error for simple derivative
     float _prevError {0.0f};
+
+    /// @brief Derivative FIR filter
+    FIR<S> _dfir;
 };
 }  // namespace csys
 

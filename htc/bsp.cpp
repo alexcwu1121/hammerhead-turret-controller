@@ -98,6 +98,10 @@ void QF::onStartup()
     HAL_NVIC_SetPriority(USB_LP_CAN_RX0_IRQn, 0U, 0U);
     HAL_NVIC_EnableIRQ(USB_LP_CAN_RX0_IRQn);
 
+    // CAN TX interrupt
+    HAL_NVIC_SetPriority(USB_HP_CAN_TX_IRQn, 0U, 0U);
+    HAL_NVIC_EnableIRQ(USB_HP_CAN_TX_IRQn);
+
     // GPIO interrupts
     // These are fault signals and thus are kernel unaware
     // HAL_NVIC_SetPriority(EXTI1_IRQn, 0U, 0U);
@@ -121,7 +125,17 @@ extern "C" void USART2_IRQHandler(void)
 /// @brief CAN interrupt handler
 extern "C" void USB_LP_CAN_RX0_IRQHandler(void)
 {
+    QK_ISR_ENTRY();
     HAL_CAN_IRQHandler(&hcan);
+    QK_ISR_EXIT();
+}
+
+/// @brief CAN TX interrupt handler
+extern "C" void USB_HP_CAN_TX_IRQHandler(void)
+{
+    QK_ISR_ENTRY();
+    HAL_CAN_IRQHandler(&hcan);
+    QK_ISR_EXIT();
 }
 
 /**
