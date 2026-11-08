@@ -12,18 +12,34 @@ target_link_libraries(qpcpp
         hal
 )
 
+# Build can loader
+add_subdirectory(canloader)
+
 # Build htc application
 add_executable(${CMAKE_PROJECT_NAME})
 target_include_directories(${CMAKE_PROJECT_NAME}
     PRIVATE
         ./
+        cli/
+        imu/
+        stepper/
+        control/
 )
 target_sources(${CMAKE_PROJECT_NAME}
     PRIVATE
         startup_stm32f302xc.s
-        main.cpp
         bsp.cpp
-        bmi270.cpp
+        main.cpp
+        cli/cli_ao.cpp
+        cli/cli_binding.cpp
+        cli/thirdparty/embedded_cli.c
+        cli/thirdparty/printf.c
+        imu/bmi270.cpp
+        imu/imu_ao.cpp
+        stepper/a4988.cpp
+        stepper/stepper_ao.cpp
+        stepper/tilt_home_ao.cpp
+        control/control_ao.cpp
 )
 target_link_libraries(${CMAKE_PROJECT_NAME}
     PRIVATE

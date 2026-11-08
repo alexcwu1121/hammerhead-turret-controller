@@ -95,6 +95,8 @@ void Error_Handler(void);
 #define PAN_STEP_GPIO_Port GPIOA
 #define PAN_DIR_Pin GPIO_PIN_9
 #define PAN_DIR_GPIO_Port GPIOA
+#define CAN_FAULT_Pin GPIO_PIN_10
+#define CAN_FAULT_GPIO_Port GPIOA
 #define SPI_CS_Pin GPIO_PIN_15
 #define SPI_CS_GPIO_Port GPIOA
 #define SPI_SCK_Pin GPIO_PIN_3

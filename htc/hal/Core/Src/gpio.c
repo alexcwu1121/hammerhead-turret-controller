@@ -54,8 +54,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(FAULT_LED_GPIO_Port, FAULT_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, TILT_DIR_Pin|TILT_STEP_Pin|PAN_STEP_Pin|PAN_DIR_Pin
-                          |SPI_CS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, TILT_DIR_Pin|PAN_DIR_Pin|SPI_CS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, TILT_RESET_Pin|TILT_MS3_Pin|TILT_MS2_Pin|TILT_MS1_Pin
@@ -68,10 +67,8 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(FAULT_LED_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : TILT_DIR_Pin TILT_STEP_Pin PAN_STEP_Pin PAN_DIR_Pin
-                           SPI_CS_Pin */
-  GPIO_InitStruct.Pin = TILT_DIR_Pin|TILT_STEP_Pin|PAN_STEP_Pin|PAN_DIR_Pin
-                          |SPI_CS_Pin;
+  /*Configure GPIO pins : TILT_DIR_Pin PAN_DIR_Pin SPI_CS_Pin */
+  GPIO_InitStruct.Pin = TILT_DIR_Pin|PAN_DIR_Pin|SPI_CS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -85,6 +82,12 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : CAN_FAULT_Pin */
+  GPIO_InitStruct.Pin = CAN_FAULT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(CAN_FAULT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : IMU_IT_1_Pin IMU_IT_2_Pin */
   GPIO_InitStruct.Pin = IMU_IT_1_Pin|IMU_IT_2_Pin;

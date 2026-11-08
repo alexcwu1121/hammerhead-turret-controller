@@ -13,3 +13,9 @@ To quick-run pre-commit, builds, tests:
 `podman-compose run --build pre-commit`
 `podman-compose run --build build-debug`
 `podman-compose run --build build-release`
+
+CAN ID claims:
+- Pub: 0x300 - 0x3FF
+- Sub: 0x400 - 0x4FF
+
+`arm-none-eabi-objcopy -O binary htc.elf htc.bin`

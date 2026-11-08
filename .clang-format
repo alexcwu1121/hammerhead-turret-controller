@@ -1,34 +1,54 @@
 BasedOnStyle: Google
+Language: Cpp
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: true
+#AllowShortCaseExpressionOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: Always
+AllowShortLoopsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Empty
+#AlignConsecutiveShortCaseStatements:
+#  Enabled: true
+#  AcrossEmptyLines: true
+#  AcrossComments: true
+#  AlignCaseColons: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: true
+  AfterCaseLabel: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterObjCDeclaration: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+ColumnLimit: 120
+DerivePointerAlignment: false
+PointerAlignment: Left
+UseTab: Never
 IndentWidth: 4
 TabWidth: 4
-UseTab: Never
-
-ColumnLimit: 100
-AllowShortIfStatementsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: Empty
-AllowShortLoopsOnASingleLine: false
-
-BreakBeforeBraces: Allman
-BraceWrapping:
-  AfterEnum: true
-  AfterStruct: true
-  AfterClass: true
-  AfterFunction: true
-
-PointerAlignment: Left
-SpaceBeforeParens: ControlStatements
-SpacesInContainerLiterals: false
-SpacesInParentheses: false
+IndentAccessModifiers: false
+AccessModifierOffset: -4
+FixNamespaceComments: true
+ShortNamespaceLines: 0
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeCpp11BracedList: true
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: Custom
+SpaceBeforeParensOptions:
+  AfterControlStatements: true
+  AfterFunctionDefinitionName: false
+SpaceBeforeSquareBrackets: false
 SpacesInSquareBrackets: false
-Cpp11BracedListStyle: true
-
-AlignConsecutiveAssignments: true
-AlignConsecutiveDeclarations: true
-AlignAfterOpenBracket: Align
-
-SortIncludes: true
-IncludeBlocks: Regroup
-
-IndentCaseLabels: false
-BreakBeforeBinaryOperators: NonAssignment
-PenaltyBreakBeforeFirstCallParameter: 1
+BreakConstructorInitializers: AfterColon
+PackConstructorInitializers: CurrentLine
