@@ -149,7 +149,7 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
                     {
                         float slew = 0.0f;
                         memcpy(&slew, data, sizeof(float));
-                        stepper::StepperAO::TiltInst().SetRateSlew(slew);
+                        stepper::StepperAO::PanInst().SetRateSlew(slew);
                     }
                     break;
                 }
