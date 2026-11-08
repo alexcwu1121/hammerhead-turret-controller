@@ -12,7 +12,7 @@ namespace stepper
 /// @brief Standard nema 8 steps per revolution
 static constexpr uint16_t stepsPerRev = 200U;
 /// @brief Gearbox reduction ratio
-static constexpr float gearRatio = 10.0f;
+static constexpr float gearRatio = 50.0f;
 /// @brief Encoder counts per revolution
 static constexpr uint16_t encoderCPR = 4000U;
 /// @brief Pi
@@ -24,6 +24,8 @@ static constexpr float deg2rad = pi / 180.0f;
 /// @brief Maximum angular velocity setpoint. NEMA8 maximum angular velocity ~100 rad/s at the shaft pre-gearbox.
 /// Anything above and risk stalling.
 static constexpr float maxRate = 100.0f / gearRatio;
+/// @brief IMU compensation high-pass angular velocity threshold (rad/s)
+static constexpr float imuAttitudeHiPassThreshold = 0.01f;
 
 /// @brief Axis in NED frame
 enum Axis : uint8_t
@@ -120,7 +122,7 @@ struct Options
     bool invertStabilization = false;
     /// @brief Allow instantaneous stop of stepper motor when changing direction. Screws with position control, but can
     /// make rate control snappier
-    bool instantStop = false;
+    bool instantStop = true;
     /// @brief If IMU stabilization is enabled
     bool imuStabilizationEnabled = true;
 };
@@ -231,17 +233,17 @@ private:
     /// @brief Encoder polling timer
     QP::QTimeEvt _encoderPollTimer;
     /// @brief Encoder polling timer frequency in Hz
-    static constexpr uint32_t _encoderPollTimerFreq = 500U;
+    static constexpr uint32_t _encoderPollTimerFreq = 100U;
     /// @brief Encoder polling timer interval
     static constexpr uint32_t _encoderPollTimerInterval = bsp::TICKS_PER_SEC / _encoderPollTimerFreq;
 
     /// @brief Encoder rate measurement filter
-    csys::FIR<1> _encoderRateFIR;
+    csys::FIR<5> _encoderRateFIR;
 
     /// @brief Closed loop stepper control polling timer
     QP::QTimeEvt _clTimer;
     /// @brief Stepper closed loop control timer frequency in Hz
-    static constexpr uint32_t _clTimerFreq = 100U;
+    static constexpr uint32_t _clTimerFreq = 20U;
     /// @brief Stepper closed loop control update interval
     static constexpr uint32_t _clTimerInterval = bsp::TICKS_PER_SEC / _clTimerFreq;
 

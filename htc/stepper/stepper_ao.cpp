@@ -61,20 +61,21 @@ StepperAO::StepperAO(a4988::A4988& stepperDriver, TIM_HandleTypeDef& htim, Axis 
 
 StepperAO& StepperAO::PanInst()
 {
-    static StepperAO inst(panDriver, htim2, Axis::Z,
-                          {.clSlewRate = 3.0f,
-                           .posKp = 20.0f,
-                           .posKi = 0.0f,
-                           .posKd = 1.0f,
-                           .extGearRatio = 2.9888888f,
-                           .invertStabilization = true});
+    static StepperAO inst(
+        panDriver, htim2, Axis::Z,
+        {.clSlewRate = 20.0f,
+         .posKp = 5.0f,
+         .posKi = 0.0f,
+         .posKd = 0.06f,
+         .extGearRatio = 1.19555f,  // compensate for actually having a 20:1 gearbox on pan here. lazy.
+         .invertStabilization = true});
     return inst;
 }
 
 StepperAO& StepperAO::TiltInst()
 {
     static StepperAO inst(tiltDriver, htim3, Axis::Y,
-                          {.clSlewRate = 4.0f, .posKp = 15.0f, .posKi = 0.0f, .posKd = 1.0f});
+                          {.clSlewRate = 20.0f, .posKp = 10.0f, .posKi = 0.0f, .posKd = 0.02f});
     return inst;
 }
 
@@ -264,8 +265,9 @@ Q_STATE_DEF(StepperAO, root)
                 }
             }
 
-            // integrate imu rate to estimate position
-            _imuEstimatedPos += imu_rate * (1.0f / static_cast<float>(imu::IMUAO::imuTimerFreq));
+            // integrate imu rate with hi-pass filter to estimate position
+            auto imu_rate_filtered = std::abs(imu_rate) > imuAttitudeHiPassThreshold ? imu_rate : 0.0f;
+            _imuEstimatedPos += imu_rate_filtered * (1.0f / static_cast<float>(imu::IMUAO::imuTimerFreq));
 
             status_ = Q_RET_HANDLED;
             break;
@@ -583,7 +585,7 @@ Q_STATE_DEF(StepperAO, active_cl)
             // in that event, if we set rate command to last rate, then the motor will travel in the opposite direction
             // and have to reverse thus, if the current observed rate is opposite the desired rate, we will immediately
             // zero the rate command
-            if (_options.instantStop && std::signbit(_rateCommand) != std::signbit(_lastRate)) { _rateCommand = 0.0f; }
+            if (_options.instantStop && std::signbit(_rateSetpoint) != std::signbit(_lastRate)) { _rateCommand = 0.0f; }
             else { _rateCommand = _lastRate; }
 
             if (rate_error > 0) { _rateCommand += correction_mag; }

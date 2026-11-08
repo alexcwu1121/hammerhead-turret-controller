@@ -65,6 +65,10 @@ enum SubCANID : uint16_t
     SUB_POKE_WATCHDOG,
     SUB_ENABLE_WATCHDOG,
     SUB_DISABLE_WATCHDOG,
+    SUB_ENABLE_PAN,
+    SUB_ENABLE_TILT,
+    SUB_DISABLE_PAN,
+    SUB_DISABLE_TILT,
     MAX_SUB_ID
 };
 
@@ -313,6 +317,26 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
                     control::ControlAO::Inst().DisableWatchdog();
                     break;
                 }
+                case SubCANID::SUB_ENABLE_PAN:
+                {
+                    stepper::StepperAO::PanInst().Enable();
+                    break;
+                }
+                case SubCANID::SUB_ENABLE_TILT:
+                {
+                    stepper::StepperAO::TiltInst().Enable();
+                    break;
+                }
+                case SubCANID::SUB_DISABLE_PAN:
+                {
+                    stepper::StepperAO::PanInst().Disable();
+                    break;
+                }
+                case SubCANID::SUB_DISABLE_TILT:
+                {
+                    stepper::StepperAO::TiltInst().Disable();
+                    break;
+                }
                 default:
                 {
                     break;
@@ -429,19 +453,19 @@ void ControlAO::SetFault(bsp::SubsystemID id, uint8_t fault, bool active)
             if (is_fault) { HAL_GPIO_WritePin(FAULT_LED_GPIO_Port, FAULT_LED_Pin, GPIO_PIN_SET); }
             else { HAL_GPIO_WritePin(FAULT_LED_GPIO_Port, FAULT_LED_Pin, GPIO_PIN_RESET); }
         }
+
+        // make sure we haven't overflowed into the sub id region
+        auto stdid = PubCANID::PUB_FAULT_INDEX + id * bsp::MAX_SUBSYSTEM_FAULTS + fault;
+
+        if (stdid >= SubCANIDIdx)
+        {
+            // we could trap ourselves in a recursion here if the fault is can tx fault...
+            // just don't report this particular fault if address overflow has occurred
+            return;
+        }
+
+        TransmitCAN(stdid, (uint8_t*)&active, 1);
     }
-
-    // make sure we haven't overflowed into the sub id region
-    auto stdid = PubCANID::PUB_FAULT_INDEX + id * bsp::MAX_SUBSYSTEM_FAULTS + fault;
-
-    if (stdid >= SubCANIDIdx)
-    {
-        // we could trap ourselves in a recursion here if the fault is can tx fault...
-        // just don't report this particular fault if address overflow has occurred
-        return;
-    }
-
-    TransmitCAN(stdid, (uint8_t*)&active, 1);
 }
 
 void ControlAO::TransmitCAN(uint16_t stdId, const uint8_t* data, uint8_t dlc)

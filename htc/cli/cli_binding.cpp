@@ -330,6 +330,24 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
                     handled = true;
                 }
             }
+            else if (strcmp(cmd_str, "setslew") == 0)
+            {
+                const char* motor_str = embeddedCliGetToken(args, 2U);
+                const char* slew_str = embeddedCliGetToken(args, 3U);
+                float slew = strtofS(slew_str);
+
+                if (strcmp(motor_str, "pan") == 0 || strcmp(motor_str, "all") == 0)
+                {
+                    stepper::StepperAO::PanInst().SetRateSlew(slew);
+                    handled = true;
+                }
+
+                if (strcmp(motor_str, "tilt") == 0 || strcmp(motor_str, "all") == 0)
+                {
+                    stepper::StepperAO::TiltInst().SetRateSlew(slew);
+                    handled = true;
+                }
+            }
             break;
         }
         default:
@@ -352,10 +370,13 @@ void cli::onTurret(EmbeddedCli* cli, char* args, void* context)
             "\tturret setkp [all|pan|tilt] [val]\n\r"
             "\tturret setki [all|pan|tilt] [val]\n\r"
             "\tturret setkd [all|pan|tilt] [val]\n\r"
+            "\tturret setslew [all|pan|tilt] [val]\n\r"
             "\tturret disable [all|pan|tilt]\n\r"
             "\tturret enable [all|pan|tilt]\n\r"
             "\tturret home [all|pan|tilt]\n\r"
-            "\tturret aborthome [all|pan|tilt]\n\r");
+            "\tturret aborthome [all|pan|tilt]\n\r"
+            "\tturret disableinstantstop [all|pan|tilt]\n\r"
+            "\tturret enableinstantstop [all|pan|tilt]\n\r");
     }
 }
 
